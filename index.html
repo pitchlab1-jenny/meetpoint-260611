@@ -3,8 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📍 MeetPoint — Find the perfect meeting spot</title>
-<meta name="description" content="MeetPoint finds the optimal meeting place for 2–20 people based on everyone's location, transport mode, and the purpose of your gathering.">
+<title>FindMeetPoint — Find the perfect meeting spot</title>
+<meta name="description" content="FindMeetPoint finds the optimal meeting place for 2–20 people based on everyone's location, transport mode, and the purpose of your gathering.">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
+<meta property="og:title" content="FindMeetPoint — Find the perfect meeting spot">
+<meta property="og:description" content="The fairest place to meet, for everyone. Find the best spot for 2–20 people.">
+<meta property="og:image" content="logo.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
 <!-- ============================================================
      GOOGLE ADSENSE — uncomment after approval, replace ca-pub-XXXXXXXXXX
 ============================================================ -->
@@ -58,8 +65,7 @@ header{
   flex-shrink:0;display:inline-flex;align-items:center;gap:8px;
 }
 .logo-icon{height:32px;width:auto;display:block}
-.tagline{font-size:.82rem;color:var(--muted);white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
-.tagline-icon{height:16px;width:auto;display:block;opacity:.9}
+.tagline{font-size:.82rem;color:var(--muted);white-space:nowrap}
 /* Language tabs — all four visible, tap to switch */
 .lang-tabs{
   display:flex;align-items:center;gap:4px;flex-shrink:0;
@@ -355,7 +361,7 @@ footer{
 <header>
   <div class="logo">
     <h1><img src="logo.png" alt="" class="logo-icon"> FindMeetPoint</h1>
-    <span class="tagline"><img src="logo.png" alt="" class="tagline-icon"> <span data-i18n="tagline">The fairest place to meet, for everyone.</span></span>
+    <span class="tagline" data-i18n="tagline">The fairest place to meet, for everyone</span>
   </div>
   <div class="lang-tabs" id="langTabs" role="tablist" aria-label="Language">
     <button class="lang-tab" data-lang="ko" role="tab">한국어</button>
@@ -425,7 +431,7 @@ footer{
     <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     -->
   </div>
-  <div class="footer-note">© 2026 MeetPoint · <span data-i18n="footerNote">Made for friends who can never agree where to meet.</span></div>
+  <div class="footer-note">© 2026 FindMeetPoint · <span data-i18n="footerNote">Made for friends who can never agree where to meet.</span></div>
   <div class="footer-company">
     <span data-i18n="madeBy">Made by</span> PitchNote (피치노트) · Yang Jihye (양지혜)
   </div>
@@ -462,7 +468,7 @@ const HAS_KEY = CONFIG.GOOGLE_MAPS_API_KEY && CONFIG.GOOGLE_MAPS_API_KEY !== 'AP
 ============================================================ */
 const TRANSLATIONS = {
   en: {
-    tagline: 'The fairest place to meet, for everyone.',
+    tagline: 'The fairest place to meet, for everyone',
     participants: 'Participants',
     addPerson: 'Add person',
     purpose: 'Meeting purpose',
@@ -515,7 +521,7 @@ const TRANSLATIONS = {
     }
   },
   ko: {
-    tagline: '모두에게 공평한 만남의 장소.',
+    tagline: '모두에게 공평한 만남의 장소',
     participants: '참여자',
     addPerson: '사람 추가',
     purpose: '모임 목적',
@@ -568,7 +574,7 @@ const TRANSLATIONS = {
     }
   },
   ja: {
-    tagline: 'みんなに公平な待ち合わせ場所。',
+    tagline: 'みんなに公平な待ち合わせ場所',
     participants: '参加者',
     addPerson: '人を追加',
     purpose: '集まりの目的',
@@ -621,7 +627,7 @@ const TRANSLATIONS = {
     }
   },
   zh: {
-    tagline: '对每个人都公平的见面地点。',
+    tagline: '对每个人都公平的见面地点',
     participants: '参与者',
     addPerson: '添加成员',
     purpose: '聚会目的',
@@ -1715,7 +1721,7 @@ function init() {
   const contactLink = document.getElementById('contactLink');
   if (contactLink) {
     const email = CONFIG.CONTACT_USER + '@' + CONFIG.CONTACT_DOMAIN;
-    contactLink.href = 'mailto:' + email + '?subject=' + encodeURIComponent('[MeetPoint] 문의');
+    contactLink.href = 'mailto:' + email + '?subject=' + encodeURIComponent('[FindMeetPoint] 문의');
     contactLink.addEventListener('click', async (e) => {
       e.preventDefault();
       // Copy the address to the clipboard.
