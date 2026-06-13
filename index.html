@@ -777,8 +777,11 @@ async function attachAutocomplete(locWrap, locInput, p) {
   locWrap._acAttached = true;
   try {
     await loadGoogleMaps();
-    const { PlaceAutocompleteElement } = await google.maps.importLibrary('places');
-    // Create the modern autocomplete web component.
+    // The script is loaded with libraries=places, so the constructor is
+    // available directly on google.maps.places — no importLibrary needed
+    // (importLibrary only exists with the newer bootstrap loader).
+    const PlaceAutocompleteElement = google.maps.places.PlaceAutocompleteElement;
+    if (!PlaceAutocompleteElement) throw new Error('PlaceAutocompleteElement unavailable');
     const ac = new PlaceAutocompleteElement();
     ac.classList.add('gmp-ac');
     // Hide our plain input + 🔍 icon; the widget brings its own input.
@@ -793,13 +796,20 @@ async function attachAutocomplete(locWrap, locInput, p) {
         await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location'] });
         const loc = place.location;
         if (loc) {
-          p.coords = { lat: loc.lat(), lng: loc.lng() };
+          const lat = typeof loc.lat === 'function' ? loc.lat() : loc.lat;
+          const lng = typeof loc.lng === 'function' ? loc.lng() : loc.lng;
+          p.coords = { lat, lng };
           p.locationText = place.formattedAddress || place.displayName || p.locationText;
           locWrap.classList.add('resolved');
           cacheSet(normKey(p.locationText), p.coords);
         }
       } catch (e) {
-        console.warn('[MeetPoint] place fetch failed:', e);
+        // Fallback: keep the prediction text so Find can geocode via Nominatim.
+        try {
+          p.locationText = placePrediction.text?.text || placePrediction.text || p.locationText;
+          p.coords = null;
+        } catch {}
+        console.warn('[MeetPoint] place fetch failed, will geocode on Find:', e);
       }
     });
   } catch (e) {
