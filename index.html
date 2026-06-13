@@ -41,6 +41,7 @@ body{
   font-family:'Plus Jakarta Sans','Noto Sans KR',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   background:var(--bg);color:var(--text);
   -webkit-font-smoothing:antialiased;
+  color-scheme:light;
 }
 button{font-family:inherit;cursor:pointer}
 input,select{font-family:inherit}
@@ -158,9 +159,22 @@ header{
 }
 .p-location:focus{outline:none;border-color:var(--primary)}
 .p-loc-wrap.resolved .p-location{border-color:var(--success);background:#F0FDF4}
-/* Modern Google Places Autocomplete web component — fill the row width */
-.gmp-ac{width:100%;display:block}
-.p-loc-wrap.resolved .gmp-ac::part(input){border-color:var(--success)}
+/* Modern Google Places Autocomplete web component — fill the row width.
+   Force a light color scheme so the widget doesn't turn black on phones
+   that are in dark mode. */
+.gmp-ac{
+  width:100%;display:block;
+  color-scheme:light;
+  --gmp-mat-color-surface:#FFFFFF;
+  --gmp-mat-color-on-surface:#1A1A2E;
+  --gmp-mat-color-on-surface-variant:#6B7280;
+  --gmp-mat-color-outline:#E5E7EB;
+}
+.gmp-ac::part(input){
+  background:#FFFFFF;color:var(--text);
+  border:1px solid var(--border);border-radius:10px;
+}
+.p-loc-wrap.resolved .gmp-ac::part(input){border-color:var(--success);background:#F0FDF4}
 /* 📍 my-location button (now a labelled button under the search box) */
 .p-geo{
   align-self:flex-start;border:1px solid var(--border);background:var(--surface);
@@ -301,8 +315,14 @@ footer{
 }
 .footer-note{margin-bottom:8px}
 .footer-company{font-size:.8rem;color:var(--muted)}
-.footer-company a{color:var(--primary);text-decoration:none;font-weight:600}
-.footer-company a:hover{text-decoration:underline}
+.footer-contact{margin-top:8px}
+.footer-contact a{
+  display:inline-flex;align-items:center;gap:5px;
+  color:var(--primary);text-decoration:none;font-weight:600;
+  border:1px solid var(--border);border-radius:999px;padding:6px 16px;
+  transition:all .15s;
+}
+.footer-contact a:hover{background:var(--primary-soft);border-color:var(--primary)}
 .footer-sep{margin:0 8px;opacity:.5}
 /* ---------- InfoWindow ---------- */
 .iw{max-width:240px;font-family:inherit}
@@ -404,7 +424,8 @@ footer{
   <div class="footer-note">© 2026 MeetPoint · <span data-i18n="footerNote">Made for friends who can never agree where to meet.</span></div>
   <div class="footer-company">
     <span data-i18n="madeBy">Made by</span> PitchNote (피치노트) · Yang Jihye (양지혜)
-    <span class="footer-sep">·</span>
+  </div>
+  <div class="footer-contact">
     <a id="contactLink" href="#">📧 <span data-i18n="contact">Contact</span></a>
   </div>
 </footer>
@@ -448,7 +469,7 @@ const TRANSLATIONS = {
     shareCopied: 'Link copied! Send it to your group.',
     advertisement: 'Advertisement',
     footerNote: 'Made for friends who can never agree where to meet.',
-    madeBy: 'Made by', contact: 'Contact',
+    madeBy: 'Made by', contact: 'Contact', contactCopied: 'copied!',
     personDefault: 'Person',
     locationPlaceholder: 'Search an address or place…',
     minMsg: 'You need at least 2 people to find a meeting point. 🙂',
@@ -501,7 +522,7 @@ const TRANSLATIONS = {
     shareCopied: '링크가 복사되었어요! 친구들에게 보내보세요.',
     advertisement: '광고',
     footerNote: '약속 장소 못 정하는 친구들을 위해 만들었어요.',
-    madeBy: '만든 사람', contact: '문의하기',
+    madeBy: '만든 사람', contact: '문의하기', contactCopied: '복사됨!',
     personDefault: '참여자',
     locationPlaceholder: '주소나 장소를 검색하세요…',
     minMsg: '만남 장소를 찾으려면 최소 2명이 필요해요. 🙂',
@@ -554,7 +575,7 @@ const TRANSLATIONS = {
     shareCopied: 'リンクをコピーしました！みんなに送りましょう。',
     advertisement: '広告',
     footerNote: '待ち合わせ場所を決められない友達のために。',
-    madeBy: '制作', contact: 'お問い合わせ',
+    madeBy: '制作', contact: 'お問い合わせ', contactCopied: 'コピーしました！',
     personDefault: '参加者',
     locationPlaceholder: '住所や場所を検索…',
     minMsg: '待ち合わせ場所を探すには2人以上必要です。🙂',
@@ -607,7 +628,7 @@ const TRANSLATIONS = {
     shareCopied: '链接已复制！发给小伙伴吧。',
     advertisement: '广告',
     footerNote: '献给永远定不下见面地点的朋友们。',
-    madeBy: '制作', contact: '联系我们',
+    madeBy: '制作', contact: '联系我们', contactCopied: '已复制！',
     personDefault: '成员',
     locationPlaceholder: '搜索地址或地点…',
     minMsg: '至少需要2个人才能查找见面地点。🙂',
@@ -1684,11 +1705,31 @@ function init() {
   document.getElementById('btnAdd').addEventListener('click', () => addParticipant({}));
   document.getElementById('btnFind').addEventListener('click', findMeetingPoint);
   document.getElementById('btnShare').addEventListener('click', shareState);
-  // Assemble the contact email at runtime (spam-bot protection).
+  // Contact: clicking copies the email AND tries to open a mail app.
+  // (mailto: alone does nothing when no default mail app is set — e.g.
+  //  webmail users — so we always copy the address as a reliable fallback.)
   const contactLink = document.getElementById('contactLink');
   if (contactLink) {
     const email = CONFIG.CONTACT_USER + '@' + CONFIG.CONTACT_DOMAIN;
     contactLink.href = 'mailto:' + email + '?subject=' + encodeURIComponent('[MeetPoint] 문의');
+    contactLink.addEventListener('click', async (e) => {
+      e.preventDefault();
+      // Copy the address to the clipboard.
+      try {
+        await navigator.clipboard.writeText(email);
+      } catch {
+        const ta = document.createElement('textarea');
+        ta.value = email; document.body.appendChild(ta); ta.select();
+        document.execCommand('copy'); ta.remove();
+      }
+      // Brief "copied!" feedback on the link itself.
+      const label = contactLink.querySelector('span');
+      const original = label ? label.textContent : '';
+      if (label) label.textContent = '✅ ' + email + ' ' + (t('contactCopied') || 'copied!');
+      setTimeout(() => { if (label) label.textContent = original; }, 2600);
+      // Also attempt to open the default mail app (harmless if none).
+      window.location.href = contactLink.href;
+    });
   }
   // Language tabs — click to switch directly.
   document.querySelectorAll('.lang-tab').forEach(tab => {
