@@ -5,18 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>📍 MeetPoint — Find the perfect meeting spot</title>
 <meta name="description" content="MeetPoint finds the optimal meeting place for 2–20 people based on everyone's location, transport mode, and the purpose of your gathering.">
-
 <!-- ============================================================
      GOOGLE ADSENSE — uncomment after approval, replace ca-pub-XXXXXXXXXX
 ============================================================ -->
 <!-- AdSense: uncomment after approval, replace ca-pub-XXXXXXXXXX
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXX" crossorigin="anonymous"></script>
 -->
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-
 <style>
 /* ==========================================================
    MeetPoint — Design tokens
@@ -47,7 +44,6 @@ body{
 }
 button{font-family:inherit;cursor:pointer}
 input,select{font-family:inherit}
-
 /* ---------- Header ---------- */
 header{
   position:sticky;top:0;z-index:100;height:var(--header-h);
@@ -66,7 +62,6 @@ header{
   flex-shrink:0;
 }
 .lang-btn:hover{border-color:var(--primary);color:var(--primary)}
-
 /* ---------- Banners ---------- */
 .banner-key{
   display:none;background:var(--warn-bg);border-bottom:1px solid var(--warn-border);
@@ -79,7 +74,6 @@ header{
   padding:8px 14px;border-radius:999px;box-shadow:var(--shadow);
 }
 .debug-counter.visible{display:block}
-
 /* ---------- Layout ---------- */
 .app{
   display:flex;min-height:calc(100vh - var(--header-h));
@@ -92,21 +86,17 @@ header{
 .panel-right{
   flex:1;display:flex;flex-direction:column;min-width:0;
 }
+/* The right panel only appears AFTER the user taps Find. */
+.panel-right.hidden{display:none}
 #map{
   width:100%;flex:1;min-height:420px;background:#E8EBF5;
   display:flex;align-items:center;justify-content:center;
 }
-.map-placeholder{
-  color:var(--muted);font-size:.95rem;text-align:center;padding:24px;
-  display:flex;flex-direction:column;gap:10px;align-items:center;
-}
-.map-placeholder .icon{font-size:2.4rem}
 .results-area{
   background:var(--surface);border-top:1px solid var(--border);
   padding:20px 24px 32px;overflow-y:auto;max-height:46vh;
 }
 .results-area.empty{display:none}
-
 /* ---------- Sections ---------- */
 .section-title{
   font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
@@ -116,37 +106,57 @@ header{
   background:var(--primary-soft);color:var(--primary);font-size:.75rem;
   font-weight:700;padding:2px 10px;border-radius:999px;letter-spacing:0;text-transform:none;
 }
-
 /* ---------- Participant cards ---------- */
 #participants{display:flex;flex-direction:column;gap:12px}
 .p-card{
   background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);
   border-left:5px solid var(--primary);padding:14px;
   overflow:hidden;
-  max-height:300px;opacity:1;
+  max-height:320px;opacity:1;
   transition:max-height .35s ease,opacity .3s ease,transform .3s ease,margin .35s ease,padding .35s ease;
 }
 .p-card.entering{max-height:0;opacity:0;transform:translateY(8px);padding-top:0;padding-bottom:0;margin-top:-12px}
 .p-card.removing{max-height:0;opacity:0;transform:translateX(24px);padding-top:0;padding-bottom:0;margin-top:-12px}
-.p-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.p-row{display:flex;gap:6px;align-items:center;margin-bottom:8px}
 .p-name{
-  flex:1;border:none;background:transparent;font-weight:700;font-size:.95rem;
+  flex:1;border:1px solid transparent;background:transparent;font-weight:700;font-size:.95rem;
   color:var(--text);padding:4px 6px;border-radius:8px;min-width:0;
+  transition:border-color .15s,background .15s;
 }
-.p-name:focus{outline:2px solid var(--primary-soft);background:var(--bg)}
+.p-name:hover{background:var(--bg)}
+.p-name:focus{outline:none;border-color:var(--primary);background:var(--bg)}
+/* Edit (pencil) button — always clearly visible so users know the name is editable */
+.p-edit{
+  border:1px solid var(--border);background:var(--surface);color:var(--primary);
+  font-size:.9rem;width:30px;height:30px;border-radius:8px;line-height:1;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.p-edit:hover{background:var(--primary-soft);border-color:var(--primary)}
+.p-edit.editing{background:var(--primary);border-color:var(--primary);color:#fff}
 .p-remove{
   border:none;background:transparent;color:var(--muted);font-size:1.05rem;
   width:28px;height:28px;border-radius:8px;line-height:1;flex-shrink:0;
   transition:all .15s;
 }
 .p-remove:hover{background:#FEE2E2;color:var(--accent)}
+/* Location input with leading 🔍 icon + trailing 📍 my-location button */
+.p-loc-wrap{position:relative;display:flex;align-items:center}
+.p-loc-icon{
+  position:absolute;left:12px;font-size:.95rem;pointer-events:none;opacity:.6;
+}
 .p-location{
   width:100%;border:1px solid var(--border);border-radius:10px;
-  padding:10px 12px;font-size:.88rem;background:var(--bg);
+  padding:10px 44px 10px 36px;font-size:.88rem;background:var(--bg);
   transition:border-color .15s;
 }
 .p-location:focus{outline:none;border-color:var(--primary)}
 .p-location.resolved{border-color:var(--success);background:#F0FDF4}
+.p-geo{
+  position:absolute;right:6px;border:none;background:transparent;font-size:1rem;
+  width:32px;height:32px;border-radius:8px;line-height:1;
+  display:flex;align-items:center;justify-content:center;transition:background .15s;
+}
+.p-geo:hover{background:var(--primary-soft)}
 .p-transports{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .t-chip{
   border:1px solid var(--border);background:var(--surface);border-radius:999px;
@@ -155,14 +165,12 @@ header{
 }
 .t-chip.active{background:var(--primary);border-color:var(--primary);color:#fff}
 .t-chip:hover:not(.active){border-color:var(--primary);color:var(--primary)}
-
 .btn-add{
   border:2px dashed var(--border);background:transparent;border-radius:var(--radius);
   padding:12px;font-size:.9rem;font-weight:600;color:var(--muted);width:100%;
   transition:all .2s;
 }
 .btn-add:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-soft)}
-
 /* ---------- Purpose ---------- */
 .purpose-grid{display:flex;flex-wrap:wrap;gap:8px}
 .purpose-chip{
@@ -172,7 +180,6 @@ header{
 }
 .purpose-chip.active{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:0 4px 12px rgba(79,110,247,.35)}
 .purpose-chip:hover:not(.active){border-color:var(--primary)}
-
 /* ---------- Find button / messages ---------- */
 .btn-find{
   width:100%;border:none;border-radius:var(--radius);padding:16px;
@@ -188,7 +195,6 @@ header{
 .msg.visible{display:block}
 .msg.info{background:var(--primary-soft);color:var(--primary)}
 .msg.error{background:#FEE2E2;color:#B91C1C}
-
 /* ---------- Loading ---------- */
 .loading-overlay{
   display:none;position:fixed;inset:0;background:rgba(248,249,252,.75);
@@ -203,8 +209,15 @@ header{
 }
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-text{font-weight:700;color:var(--primary);font-size:.95rem}
-
-/* ---------- Result cards ---------- */
+/* ---------- Result groups ---------- */
+.results-group{margin-bottom:8px}
+.group-header{
+  font-size:1rem;font-weight:800;margin:18px 0 12px;display:flex;align-items:center;gap:8px;
+}
+.group-header.second{
+  padding-top:16px;border-top:2px dashed var(--border);margin-top:24px;
+}
+.group-sub{font-size:.8rem;font-weight:600;color:var(--muted);margin-left:4px}
 .results-title{font-size:1.05rem;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .btn-share{
   margin-left:auto;border:1px solid var(--border);background:var(--surface);
@@ -218,10 +231,7 @@ header{
   opacity:0;transform:translateY(20px);
   animation:slideUp .5s ease forwards;
 }
-.result-card:nth-child(1){animation-delay:.05s}
-.result-card:nth-child(2){animation-delay:.18s}
-.result-card:nth-child(3){animation-delay:.31s}
-.result-card:nth-child(4){animation-delay:.44s}
+.result-card.second-card{border-style:dashed;border-color:#F0ABCB;background:#FFF7FB}
 @keyframes slideUp{to{opacity:1;transform:translateY(0)}}
 .rc-photo{
   width:120px;height:120px;flex-shrink:0;border-radius:12px;object-fit:cover;
@@ -235,18 +245,28 @@ header{
   align-items:center;justify-content:center;font-size:.8rem;font-weight:800;color:#fff;
 }
 .rc-rank.r1{background:#F59E0B}.rc-rank.r2{background:#94A3B8}.rc-rank.r3{background:#B45309}
+.rc-rank.second{background:#EC4899}
 .rc-name{font-size:1rem;font-weight:800;flex:1;min-width:120px}
 .rc-meta{font-size:.84rem;color:var(--muted);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .rc-rating{color:#F59E0B;font-weight:700}
 .rc-open{color:var(--success);font-weight:700}
 .rc-closed{color:var(--accent);font-weight:700}
 .rc-addr{font-size:.82rem;color:var(--muted);margin-top:4px}
+/* Closing time + admission fee highlight boxes for 2차 venues */
+.rc-info-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.info-pill{
+  display:inline-flex;align-items:center;gap:5px;font-size:.78rem;font-weight:700;
+  padding:5px 11px;border-radius:10px;
+}
+.info-closing{background:#FEF3C7;color:#92400E}
+.info-fee{background:#E0E7FF;color:#3730A3}
 .badge{
   display:inline-flex;align-items:center;gap:4px;font-size:.72rem;font-weight:700;
   padding:3px 9px;border-radius:999px;
 }
 .badge-parking{background:#DBEAFE;color:#1D4ED8}
-.badge-second{background:#FCE7F3;color:#BE185D}
+.badge-alcohol{background:#FCE7F3;color:#BE185D}
+.badge-noalcohol{background:#DCFCE7;color:#15803D}
 .rc-times{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .time-chip{
   display:inline-flex;align-items:center;gap:5px;font-size:.76rem;font-weight:700;
@@ -256,28 +276,21 @@ header{
 .rc-links{margin-top:10px;display:flex;gap:12px;flex-wrap:wrap}
 .rc-links a{font-size:.8rem;font-weight:700;color:var(--primary);text-decoration:none}
 .rc-links a:hover{text-decoration:underline}
-
 /* ---------- Ad containers ---------- */
-.ad-container{
-  margin:16px auto;text-align:center;max-width:100%;
-}
+.ad-container{margin:16px auto;text-align:center;max-width:100%}
 .ad-container .ad-label{
-  font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
-  margin-bottom:4px;
+  font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;
 }
-
 /* ---------- Footer ---------- */
 footer{
   background:var(--surface);border-top:1px solid var(--border);
   padding:24px;text-align:center;color:var(--muted);font-size:.8rem;
 }
-
 /* ---------- InfoWindow ---------- */
 .iw{max-width:240px;font-family:inherit}
 .iw img{width:100%;height:110px;object-fit:cover;border-radius:8px;margin-top:6px}
 .iw .iw-name{font-weight:800;font-size:.92rem}
 .iw .iw-meta{font-size:.8rem;color:var(--muted);margin-top:2px}
-
 /* ---------- Mobile ---------- */
 @media (max-width: 900px){
   .app{flex-direction:column}
@@ -294,10 +307,8 @@ footer{
 </style>
 </head>
 <body>
-
 <!-- API key warning banner -->
 <div class="banner-key" id="keyBanner">⚠️ API 키를 입력해주세요 / Please add your Google Maps API key</div>
-
 <header>
   <div class="logo">
     <h1><span class="pin">📍</span> MeetPoint</h1>
@@ -305,7 +316,6 @@ footer{
   </div>
   <button class="lang-btn" id="langBtn" aria-label="Change language">🌐 <span id="langLabel">EN</span></button>
 </header>
-
 <!-- ============================================================
      AD PLACEMENT 1 — below header (horizontal responsive banner)
 ============================================================ -->
@@ -321,9 +331,8 @@ footer{
   <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
   -->
 </div>
-
 <div class="app">
-  <!-- ================= LEFT PANEL ================= -->
+  <!-- ================= LEFT PANEL (input form) ================= -->
   <aside class="panel-left">
     <section>
       <div class="section-title">
@@ -335,25 +344,16 @@ footer{
       <button class="btn-add" id="btnAdd">＋ <span data-i18n="addPerson">Add person</span></button>
       <div class="msg info" id="msgLimit" style="margin-top:10px"></div>
     </section>
-
     <section>
       <div class="section-title"><span data-i18n="purpose">Meeting purpose</span></div>
       <div class="purpose-grid" id="purposeGrid"></div>
     </section>
-
     <div class="msg error" id="msgError"></div>
     <button class="btn-find" id="btnFind">🔍 <span data-i18n="find">Find meeting point</span></button>
   </aside>
-
-  <!-- ================= RIGHT PANEL ================= -->
-  <main class="panel-right">
-    <div id="map">
-      <div class="map-placeholder" id="mapPlaceholder">
-        <span class="icon">🗺️</span>
-        <span data-i18n="mapHint">The map appears here after you tap “Find meeting point”.</span>
-      </div>
-    </div>
-
+  <!-- ================= RIGHT PANEL (hidden until Find) ================= -->
+  <main class="panel-right hidden" id="panelRight">
+    <div id="map"></div>
     <div class="results-area empty" id="resultsArea">
       <div class="results-title">
         <span data-i18n="results">Top picks for your group</span>
@@ -363,7 +363,6 @@ footer{
     </div>
   </main>
 </div>
-
 <footer>
   <!-- ============================================================
        AD PLACEMENT 3 — footer leaderboard
@@ -380,30 +379,26 @@ footer{
   </div>
   <div>© 2026 MeetPoint · <span data-i18n="footerNote">Made for friends who can never agree where to meet.</span></div>
 </footer>
-
 <!-- Loading overlay -->
 <div class="loading-overlay" id="loading">
   <div class="spinner" role="status" aria-live="polite"></div>
   <div class="loading-text" data-i18n="finding">Finding the perfect spot…</div>
 </div>
-
 <!-- Debug API counter (?debug=1) -->
 <div class="debug-counter" id="debugCounter">API calls used: <span id="debugCount">0</span></div>
-
 <script>
 'use strict';
-
 /* ============================================================
    CONFIG — add your Google Maps API key here
+   (Replace API_KEY_HERE with your key. Keep the comparison
+    string in HAS_KEY exactly as 'API_KEY_HERE'.)
 ============================================================ */
 const CONFIG = {
   GOOGLE_MAPS_API_KEY: 'AIzaSyAcTTqKOQ9exij0YfnBUgi5NXkS01zV5no',
   MAX_RESULTS: 5,
   SEARCH_RADIUS_METERS: 1500,
 };
-
 const HAS_KEY = CONFIG.GOOGLE_MAPS_API_KEY && CONFIG.GOOGLE_MAPS_API_KEY !== 'API_KEY_HERE';
-
 /* ============================================================
    TRANSLATIONS — EN / KO / JA / ZH
 ============================================================ */
@@ -418,11 +413,10 @@ const TRANSLATIONS = {
     results: 'Top picks for your group',
     share: 'Share',
     shareCopied: 'Link copied! Send it to your group.',
-    mapHint: 'The map appears here after you tap “Find meeting point”.',
     advertisement: 'Advertisement',
     footerNote: 'Made for friends who can never agree where to meet.',
     personDefault: 'Person',
-    locationPlaceholder: 'Start typing an address or place…',
+    locationPlaceholder: 'Search an address or place…',
     minMsg: 'You need at least 2 people to find a meeting point. 🙂',
     maxMsg: 'That’s a big party! 20 people is the maximum. 🎉',
     needLocations: 'Please set a location for: ',
@@ -432,9 +426,23 @@ const TRANSLATIONS = {
     open: 'Open now',
     closed: 'Closed',
     parking: 'Parking',
-    secondPick: '⭐ Best for round 2 nearby',
+    mainGroup: '🍽️ Main spot',
+    mainSub: 'The fairest place for everyone to gather',
+    secondGroup: '✨ Round 2 (After-party)',
+    secondSub: 'Where to go next',
+    closingTime: 'Closes',
+    noClosing: 'Hours unavailable',
+    admission: 'Admission',
+    noAdmission: 'No fee info',
+    free: 'Free',
+    alcohol: 'Drinks available',
+    noAlcohol: 'Alcohol-free',
     viewMap: 'View on Google Maps',
     website: 'Website',
+    geoLoading: 'Locating…',
+    geoDenied: 'Please allow location access. 📍',
+    geoUnsupported: 'Your browser does not support location. ',
+    editName: 'Edit name',
     errQuota: 'Too many requests right now — please try again in a moment.',
     errKey: 'Please check your API key configuration.',
     errNoResults: 'No places found nearby, even after widening the search. Try a different purpose.',
@@ -456,11 +464,10 @@ const TRANSLATIONS = {
     results: '우리 모임 추천 장소',
     share: '공유',
     shareCopied: '링크가 복사되었어요! 친구들에게 보내보세요.',
-    mapHint: '‘만남 장소 찾기’를 누르면 지도가 표시됩니다.',
     advertisement: '광고',
     footerNote: '약속 장소 못 정하는 친구들을 위해 만들었어요.',
     personDefault: '참여자',
-    locationPlaceholder: '주소나 장소를 입력하세요…',
+    locationPlaceholder: '주소나 장소를 검색하세요…',
     minMsg: '만남 장소를 찾으려면 최소 2명이 필요해요. 🙂',
     maxMsg: '대규모 모임이네요! 최대 20명까지 가능해요. 🎉',
     needLocations: '위치를 입력해주세요: ',
@@ -470,18 +477,32 @@ const TRANSLATIONS = {
     open: '영업 중',
     closed: '영업 종료',
     parking: '주차 가능',
-    secondPick: '⭐ 2차 추천',
+    mainGroup: '🍽️ 메인 장소',
+    mainSub: '모두에게 가장 공평한 모임 장소',
+    secondGroup: '✨ 2차 장소 (애프터)',
+    secondSub: '1차 다음에 가기 좋은 곳',
+    closingTime: '영업 종료',
+    noClosing: '영업시간 정보 없음',
+    admission: '입장료',
+    noAdmission: '입장료 정보 없음',
+    free: '무료',
+    alcohol: '술 가능',
+    noAlcohol: '술 없는 곳',
     viewMap: 'Google 지도에서 보기',
     website: '웹사이트',
+    geoLoading: '위치 찾는 중…',
+    geoDenied: '위치 권한을 허용해주세요. 📍',
+    geoUnsupported: '브라우저가 위치 기능을 지원하지 않아요. ',
+    editName: '이름 수정',
     errQuota: '잠시 후 다시 시도해주세요.',
     errKey: 'API 키를 확인해주세요.',
     errNoResults: '반경을 넓혀도 주변에 장소가 없어요. 다른 목적을 선택해보세요.',
     errGeneric: '검색 중 문제가 발생했어요. 다시 시도해주세요.',
-    transports: { bus:'버스', subway:'지하철', taxi:'택시', walk:'도보', car:'자동차', bike:'자전거' },
+    transports: { bus:'버스', subway:'지하철', taxi:'택시', walk:'도보', car:'자동차', train:'기차', bike:'자전거' },
     purposes: {
       date:'데이트', hangout:'친목 모임', family_dinner:'가족 식사', birthday:'생일',
       anniversary:'기념일', travel:'여행', business:'비즈니스', blind_date:'소개팅',
-      family_intro:'상견례', afterwork:'회식', leisure:'여가', other:'기타'
+      family_intro:'상견례', wedding:'청첩장 모임', afterwork:'회식', leisure:'여가', other:'기타'
     }
   },
   ja: {
@@ -494,11 +515,10 @@ const TRANSLATIONS = {
     results: 'グループへのおすすめ',
     share: '共有',
     shareCopied: 'リンクをコピーしました！みんなに送りましょう。',
-    mapHint: '「待ち合わせ場所を探す」を押すと地図が表示されます。',
     advertisement: '広告',
     footerNote: '待ち合わせ場所を決められない友達のために。',
     personDefault: '参加者',
-    locationPlaceholder: '住所や場所を入力…',
+    locationPlaceholder: '住所や場所を検索…',
     minMsg: '待ち合わせ場所を探すには2人以上必要です。🙂',
     maxMsg: '大人数ですね！最大20人までです。🎉',
     needLocations: '位置を入力してください：',
@@ -508,9 +528,23 @@ const TRANSLATIONS = {
     open: '営業中',
     closed: '営業時間外',
     parking: '駐車場あり',
-    secondPick: '⭐ 二次会におすすめ',
+    mainGroup: '🍽️ メイン会場',
+    mainSub: 'みんなに一番公平な集合場所',
+    secondGroup: '✨ 二次会（アフター）',
+    secondSub: '次に行くのにおすすめ',
+    closingTime: '閉店',
+    noClosing: '営業時間情報なし',
+    admission: '入場料',
+    noAdmission: '料金情報なし',
+    free: '無料',
+    alcohol: 'お酒あり',
+    noAlcohol: 'お酒なし',
     viewMap: 'Googleマップで見る',
     website: 'ウェブサイト',
+    geoLoading: '位置を検索中…',
+    geoDenied: '位置情報の許可をお願いします。📍',
+    geoUnsupported: 'お使いのブラウザは位置情報に対応していません。',
+    editName: '名前を編集',
     errQuota: 'しばらくしてからもう一度お試しください。',
     errKey: 'APIキーをご確認ください。',
     errNoResults: '範囲を広げても周辺に場所が見つかりませんでした。別の目的をお試しください。',
@@ -532,11 +566,10 @@ const TRANSLATIONS = {
     results: '为你们推荐的地点',
     share: '分享',
     shareCopied: '链接已复制！发给小伙伴吧。',
-    mapHint: '点击“查找见面地点”后地图将显示在这里。',
     advertisement: '广告',
     footerNote: '献给永远定不下见面地点的朋友们。',
     personDefault: '成员',
-    locationPlaceholder: '输入地址或地点…',
+    locationPlaceholder: '搜索地址或地点…',
     minMsg: '至少需要2个人才能查找见面地点。🙂',
     maxMsg: '好大的聚会！最多支持20人。🎉',
     needLocations: '请输入位置：',
@@ -546,60 +579,91 @@ const TRANSLATIONS = {
     open: '营业中',
     closed: '已打烊',
     parking: '可停车',
-    secondPick: '⭐ 续摊推荐',
+    mainGroup: '🍽️ 主要地点',
+    mainSub: '对大家最公平的聚会地点',
+    secondGroup: '✨ 续摊（二次会）',
+    secondSub: '接下来适合去的地方',
+    closingTime: '打烊时间',
+    noClosing: '暂无营业时间信息',
+    admission: '门票',
+    noAdmission: '暂无票价信息',
+    free: '免费',
+    alcohol: '提供酒水',
+    noAlcohol: '无酒水',
     viewMap: '在Google地图中查看',
     website: '网站',
+    geoLoading: '正在定位…',
+    geoDenied: '请允许位置访问权限。📍',
+    geoUnsupported: '您的浏览器不支持定位功能。',
+    editName: '编辑名称',
     errQuota: '请求过多，请稍后再试。',
     errKey: '请检查您的API密钥。',
     errNoResults: '即使扩大范围也未找到附近地点，请尝试其他目的。',
     errGeneric: '搜索时出现问题，请重试。',
-    transports: { bus:'公交', subway:'地铁', taxi:'出租车', walk:'步行', car:'开车', bike:'骑行' },
+    transports: { bus:'公交', subway:'地铁', taxi:'出租车', walk:'步行', car:'开车', train:'火车', bike:'骑行' },
     purposes: {
       date:'约会', hangout:'聚会', family_dinner:'家庭聚餐', birthday:'生日',
       anniversary:'纪念日', travel:'旅行', business:'商务', blind_date:'相亲',
-      family_intro:'见家长', afterwork:'下班聚餐', leisure:'休闲', other:'其他'
+      family_intro:'见家长', wedding:'婚礼聚会', afterwork:'下班聚餐', leisure:'休闲', other:'其他'
     }
   }
 };
-
 const LANGS = ['en', 'ko', 'ja', 'zh'];
 const LANG_LABELS = { en: 'EN', ko: '한국어', ja: '日本語', zh: '中文' };
-
 /* ============================================================
    STATIC DATA
 ============================================================ */
 const PALETTE = ['#4F6EF7','#FF6B6B','#22C55E','#F59E0B','#8B5CF6','#EC4899','#06B6D4','#84CC16','#F97316','#14B8A6'];
-
 const TRANSPORTS = [
   { id:'bus',    emoji:'🚌', osrm:'driving' },
   { id:'subway', emoji:'🚇', osrm:'driving' },
   { id:'taxi',   emoji:'🚕', osrm:'driving' },
   { id:'walk',   emoji:'🚶', osrm:'walking' },
   { id:'car',    emoji:'🚗', osrm:'driving' },
+  { id:'train',  emoji:'🚆', osrm:'driving' },
   { id:'bike',   emoji:'🚲', osrm:'cycling' },
 ];
-
+/* Each purpose now carries a `main` venue set AND a `second` (after-party)
+   configuration with its own includedTypes + a display "kind":
+     - cafe   : show closing time emphasis (감성 카페 / 디저트)
+     - drink  : alcohol vs non-alcohol options + closing time (회식/비즈니스)
+     - travel : landmark / trail / souvenir + admission fee */
 const PURPOSES = [
-  { id:'date',          emoji:'💑', types:['restaurant','cafe'] },
-  { id:'hangout',       emoji:'🎉', types:['cafe','bar','park'] },
-  { id:'family_dinner', emoji:'🍽️', types:['restaurant'] },
-  { id:'birthday',      emoji:'🎂', types:['restaurant','bar','night_club'] },
-  { id:'anniversary',   emoji:'💍', types:['restaurant','cafe'] },
-  { id:'travel',        emoji:'✈️', types:['hotel','cafe'] },
-  { id:'business',      emoji:'💼', types:['cafe','restaurant','convention_center'] },
-  { id:'blind_date',    emoji:'💬', types:['cafe','restaurant'] },
-  { id:'family_intro',  emoji:'👨‍👩‍👧', types:['restaurant'] },
-  { id:'afterwork',     emoji:'🍻', types:['bar'] },
-  { id:'leisure',       emoji:'🎮', types:['bowling_alley','movie_theater','cafe'] },
-  { id:'other',         emoji:'🌐', types:['restaurant','cafe'] },
+  { id:'date',          emoji:'💑', types:['restaurant','cafe'],
+    second:{ kind:'cafe',  types:['cafe','bakery','dessert_shop'] } },
+  { id:'hangout',       emoji:'🎉', types:['cafe','bar','park'],
+    second:{ kind:'cafe',  types:['cafe','bakery','dessert_shop'] } },
+  { id:'family_dinner', emoji:'🍽️', types:['restaurant'],
+    second:{ kind:'cafe',  types:['cafe','bakery','dessert_shop'] } },
+  { id:'birthday',      emoji:'🎂', types:['restaurant','bar','night_club'],
+    second:{ kind:'cafe',  types:['cafe','bakery','dessert_shop'] } },
+  { id:'anniversary',   emoji:'💍', types:['restaurant','cafe'],
+    second:{ kind:'cafe',  types:['cafe','bakery','dessert_shop'] } },
+  { id:'travel',        emoji:'✈️', types:['hotel','cafe'],
+    second:{ kind:'travel', types:['tourist_attraction','park','gift_shop'] } },
+  { id:'business',      emoji:'💼', types:['cafe','restaurant'],
+    second:{ kind:'drink', types:['bar','wine_bar','pub','cafe'] } },
+  { id:'blind_date',    emoji:'💬', types:['cafe','restaurant'],
+    second:{ kind:'cafe',  types:['cafe','bakery','dessert_shop'] } },
+  { id:'family_intro',  emoji:'👨‍👩‍👧', types:['restaurant'],
+    second:{ kind:'cafe',  types:['cafe','bakery','dessert_shop'] } },
+  { id:'wedding',       emoji:'💌', types:['restaurant','banquet_hall'],
+    second:{ kind:'cafe',  types:['cafe','bakery','dessert_shop'] } },
+  { id:'afterwork',     emoji:'🍻', types:['restaurant','bar'],
+    second:{ kind:'drink', types:['bar','wine_bar','pub','cafe'] } },
+  { id:'leisure',       emoji:'🎮', types:['bowling_alley','movie_theater','cafe'],
+    second:{ kind:'cafe',  types:['cafe','bakery','dessert_shop'] } },
+  { id:'other',         emoji:'🌐', types:['restaurant','cafe'],
+    second:{ kind:'cafe',  types:['cafe','bakery','dessert_shop'] } },
 ];
-
+/* Types treated as "serves alcohol" for the drink-kind 2차 labelling */
+const ALCOHOL_TYPES = new Set(['bar','wine_bar','pub','night_club','liquor_store']);
 /* ============================================================
    STATE
 ============================================================ */
 const state = {
   lang: 'en',
-  participants: [],   // { id, name, locationText, coords:{lat,lng}|null, modes:Set }
+  participants: [],
   purpose: 'hangout',
   nextId: 1,
   apiCalls: 0,
@@ -608,10 +672,9 @@ const state = {
   polylines: [],
   infoWindow: null,
   searching: false,
+  hasSearched: false,
 };
-
 const DEBUG = new URLSearchParams(location.search).get('debug') === '1';
-
 /* ============================================================
    I18N HELPERS
 ============================================================ */
@@ -621,7 +684,6 @@ function t(key) {
 }
 function tTransport(id) { return (t('transports') || {})[id] || id; }
 function tPurpose(id)   { return (t('purposes')  || {})[id] || id; }
-
 function detectLanguage() {
   const nav = (navigator.language || 'en').toLowerCase();
   if (nav.startsWith('ko')) return 'ko';
@@ -629,7 +691,6 @@ function detectLanguage() {
   if (nav.startsWith('zh')) return 'zh';
   return 'en';
 }
-
 function applyTranslations() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
     el.textContent = t(el.getAttribute('data-i18n'));
@@ -637,7 +698,6 @@ function applyTranslations() {
   document.getElementById('langLabel').textContent = LANG_LABELS[state.lang];
   document.documentElement.lang = state.lang;
   renderPurposes();
-  // Re-render transport chip labels + placeholders without rebuilding inputs
   document.querySelectorAll('.p-card').forEach(card => {
     const p = state.participants.find(x => x.id === Number(card.dataset.id));
     if (!p) return;
@@ -647,10 +707,11 @@ function applyTranslations() {
       chip.classList.toggle('active', p.modes.has(tr.id));
     });
     const loc = card.querySelector('.p-location');
-    loc.placeholder = t('locationPlaceholder');
+    if (loc) loc.placeholder = t('locationPlaceholder');
+    const edit = card.querySelector('.p-edit');
+    if (edit) edit.setAttribute('aria-label', t('editName'));
   });
 }
-
 /* ============================================================
    DEBUG API COUNTER
 ============================================================ */
@@ -661,7 +722,6 @@ function countApiCall() {
     document.getElementById('debugCount').textContent = state.apiCalls;
   }
 }
-
 /* ============================================================
    SESSION-STORAGE GEOCODE CACHE
 ============================================================ */
@@ -672,9 +732,9 @@ function cacheGet(key) {
 function cacheSet(key, val) {
   try { sessionStorage.setItem('mp_geo_' + key, JSON.stringify(val)); } catch {}
 }
-
+function normKey(text) { return (text || '').trim().toLowerCase(); }
 /* ============================================================
-   GOOGLE MAPS LOADER (lazy — script injected only when needed)
+   GOOGLE MAPS LOADER (lazy)
 ============================================================ */
 let mapsPromise = null;
 function loadGoogleMaps() {
@@ -690,17 +750,94 @@ function loadGoogleMaps() {
   });
   return mapsPromise;
 }
-
+/* ============================================================
+   ATTACH GOOGLE PLACES AUTOCOMPLETE
+   Attached as soon as the card renders (improvement #1) so the
+   dropdown appears while typing, not only after a second focus.
+   When no API key is present yet, this silently no-ops and the
+   Nominatim fallback handles geocoding on Find.
+============================================================ */
+async function attachAutocomplete(locInput, p) {
+  if (!HAS_KEY || locInput._acAttached) return;
+  locInput._acAttached = true;
+  try {
+    await loadGoogleMaps();
+    // ---- Google Maps Places Autocomplete ----
+    // Requires the "places" library, loaded via the script above with
+    // your API key (see CONFIG.GOOGLE_MAPS_API_KEY / API_KEY_HERE).
+    const ac = new google.maps.places.Autocomplete(locInput, {
+      fields: ['geometry.location', 'formatted_address', 'name'],
+    });
+    ac.addListener('place_changed', () => {
+      const place = ac.getPlace();
+      if (place && place.geometry && place.geometry.location) {
+        p.coords = { lat: place.geometry.location.lat(), lng: place.geometry.location.lng() };
+        p.locationText = locInput.value;
+        locInput.classList.add('resolved');
+        cacheSet(normKey(locInput.value), p.coords);
+      }
+    });
+  } catch {
+    /* Autocomplete unavailable — Nominatim fallback covers geocoding. */
+  }
+}
+/* ============================================================
+   REVERSE GEOCODE (my-location button)
+============================================================ */
+async function reverseGeocode(lat, lng) {
+  // Prefer Google Geocoding when a key is present; otherwise Nominatim.
+  if (HAS_KEY) {
+    try {
+      countApiCall();
+      const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&language=${state.lang}&key=${encodeURIComponent(CONFIG.GOOGLE_MAPS_API_KEY)}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.results && data.results.length) return data.results[0].formatted_address;
+      }
+    } catch {}
+  }
+  try {
+    countApiCall();
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=${state.lang}`;
+    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.display_name) return data.display_name;
+    }
+  } catch {}
+  return `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+}
+function useMyLocation(p, locInput, geoBtn) {
+  if (!navigator.geolocation) {
+    showLimitMsg(t('geoUnsupported'));
+    return;
+  }
+  const original = geoBtn.textContent;
+  geoBtn.textContent = '⏳';
+  geoBtn.disabled = true;
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    const { latitude: lat, longitude: lng } = pos.coords;
+    p.coords = { lat, lng };
+    const addr = await reverseGeocode(lat, lng);
+    p.locationText = addr;
+    locInput.value = addr;
+    locInput.classList.add('resolved');
+    cacheSet(normKey(addr), p.coords);
+    geoBtn.textContent = original;
+    geoBtn.disabled = false;
+  }, () => {
+    showLimitMsg(t('geoDenied'));
+    geoBtn.textContent = original;
+    geoBtn.disabled = false;
+  }, { enableHighAccuracy: true, timeout: 10000 });
+}
 /* ============================================================
    PARTICIPANTS
 ============================================================ */
 function colorFor(index) { return PALETTE[index % PALETTE.length]; }
-
 function addParticipant(preset = {}) {
-  if (state.participants.length >= 20) {
-    showLimitMsg(t('maxMsg'));
-    return null;
-  }
+  if (state.participants.length >= 20) { showLimitMsg(t('maxMsg')); return null; }
   const p = {
     id: state.nextId++,
     name: preset.name || '',
@@ -713,12 +850,8 @@ function addParticipant(preset = {}) {
   updateCount();
   return p;
 }
-
 function removeParticipant(id) {
-  if (state.participants.length <= 2) {
-    showLimitMsg(t('minMsg'));
-    return;
-  }
+  if (state.participants.length <= 2) { showLimitMsg(t('minMsg')); return; }
   const idx = state.participants.findIndex(p => p.id === id);
   if (idx === -1) return;
   state.participants.splice(idx, 1);
@@ -730,17 +863,12 @@ function removeParticipant(id) {
   }
   updateCount();
 }
-
 function refreshColors() {
   document.querySelectorAll('.p-card').forEach((card, i) => {
     card.style.borderLeftColor = colorFor(i);
   });
 }
-
-function updateCount() {
-  document.getElementById('pCount').textContent = state.participants.length;
-}
-
+function updateCount() { document.getElementById('pCount').textContent = state.participants.length; }
 function showLimitMsg(text) {
   const el = document.getElementById('msgLimit');
   el.textContent = text;
@@ -748,68 +876,77 @@ function showLimitMsg(text) {
   clearTimeout(el._timer);
   el._timer = setTimeout(() => el.classList.remove('visible'), 3500);
 }
-
 function defaultName(index) { return `${t('personDefault')} ${index + 1}`; }
-
 function renderParticipantCard(p, animate) {
   const idx = state.participants.indexOf(p);
   const card = document.createElement('div');
   card.className = 'p-card' + (animate ? ' entering' : '');
   card.dataset.id = p.id;
   card.style.borderLeftColor = colorFor(idx);
-
+  // ---- name row: name input + always-visible edit (pencil) + remove ----
   const row = document.createElement('div');
   row.className = 'p-row';
-
   const nameInput = document.createElement('input');
   nameInput.className = 'p-name';
   nameInput.value = p.name || defaultName(idx);
   if (!p.name) p.name = nameInput.value;
   nameInput.setAttribute('aria-label', 'Name');
+  nameInput.readOnly = true; // starts read-only; pencil toggles editing
   nameInput.addEventListener('input', () => { p.name = nameInput.value; });
-
+  // Pencil / edit button — always clearly visible (improvement #2)
+  const editBtn = document.createElement('button');
+  editBtn.className = 'p-edit';
+  editBtn.type = 'button';
+  editBtn.textContent = '✏️';
+  editBtn.setAttribute('aria-label', t('editName'));
+  editBtn.title = t('editName');
+  editBtn.addEventListener('click', () => {
+    const editing = nameInput.readOnly === false;
+    if (editing) {
+      nameInput.readOnly = true;
+      editBtn.classList.remove('editing');
+    } else {
+      nameInput.readOnly = false;
+      editBtn.classList.add('editing');
+      nameInput.focus();
+      nameInput.select();
+    }
+  });
+  nameInput.addEventListener('blur', () => {
+    nameInput.readOnly = true;
+    editBtn.classList.remove('editing');
+  });
+  nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') nameInput.blur(); });
   const removeBtn = document.createElement('button');
   removeBtn.className = 'p-remove';
   removeBtn.textContent = '✕';
   removeBtn.setAttribute('aria-label', 'Remove');
   removeBtn.addEventListener('click', () => removeParticipant(p.id));
-
   row.appendChild(nameInput);
+  row.appendChild(editBtn);
   row.appendChild(removeBtn);
-
+  // ---- location row: 🔍 icon + input + 📍 my-location button ----
+  const locWrap = document.createElement('div');
+  locWrap.className = 'p-loc-wrap';
+  const locIcon = document.createElement('span');
+  locIcon.className = 'p-loc-icon';
+  locIcon.textContent = '🔍';
   const locInput = document.createElement('input');
   locInput.className = 'p-location';
   locInput.placeholder = t('locationPlaceholder');
   locInput.value = p.locationText || '';
   if (p.coords) locInput.classList.add('resolved');
   locInput.setAttribute('aria-label', 'Location');
-
-  // COST OPTIMIZATION: Autocomplete is attached lazily on first focus,
-  // so the Google Maps JS API only loads when the user actually needs it.
-  // The Autocomplete widget itself uses session tokens internally for billing.
-  let acAttached = false;
-  locInput.addEventListener('focus', async () => {
-    if (acAttached || !HAS_KEY) return;
-    acAttached = true;
-    try {
-      await loadGoogleMaps();
-      const ac = new google.maps.places.Autocomplete(locInput, {
-        fields: ['geometry.location', 'formatted_address', 'name'],
-      });
-      ac.addListener('place_changed', () => {
-        const place = ac.getPlace();
-        if (place && place.geometry && place.geometry.location) {
-          p.coords = { lat: place.geometry.location.lat(), lng: place.geometry.location.lng() };
-          p.locationText = locInput.value;
-          locInput.classList.add('resolved');
-          cacheSet(normKey(locInput.value), p.coords); // cache geocode in sessionStorage
-        }
-      });
-    } catch { /* autocomplete unavailable — Nominatim fallback covers geocoding */ }
-  });
-
-  // Debounced manual-typing handler (300ms): invalidate stale coords,
-  // and reuse cached geocodes for previously resolved text.
+  const geoBtn = document.createElement('button');
+  geoBtn.className = 'p-geo';
+  geoBtn.type = 'button';
+  geoBtn.textContent = '📍';
+  geoBtn.title = 'Use my location';
+  geoBtn.setAttribute('aria-label', 'Use my location');
+  geoBtn.addEventListener('click', () => useMyLocation(p, locInput, geoBtn));
+  // Attach Google Places Autocomplete right away (improvement #1)
+  attachAutocomplete(locInput, p);
+  // Debounced manual-typing handler: invalidate stale coords, reuse cache
   let debounceTimer = null;
   locInput.addEventListener('input', () => {
     p.coords = null;
@@ -818,13 +955,13 @@ function renderParticipantCard(p, animate) {
     debounceTimer = setTimeout(() => {
       p.locationText = locInput.value;
       const cached = cacheGet(normKey(locInput.value));
-      if (cached) {
-        p.coords = cached;
-        locInput.classList.add('resolved');
-      }
+      if (cached) { p.coords = cached; locInput.classList.add('resolved'); }
     }, 300);
   });
-
+  locWrap.appendChild(locIcon);
+  locWrap.appendChild(locInput);
+  locWrap.appendChild(geoBtn);
+  // ---- transports ----
   const chips = document.createElement('div');
   chips.className = 'p-transports';
   TRANSPORTS.forEach(tr => {
@@ -839,19 +976,14 @@ function renderParticipantCard(p, animate) {
     });
     chips.appendChild(chip);
   });
-
   card.appendChild(row);
-  card.appendChild(locInput);
+  card.appendChild(locWrap);
   card.appendChild(chips);
   document.getElementById('participants').appendChild(card);
-
   if (animate) {
     requestAnimationFrame(() => requestAnimationFrame(() => card.classList.remove('entering')));
   }
 }
-
-function normKey(text) { return (text || '').trim().toLowerCase(); }
-
 /* ============================================================
    PURPOSE GRID
 ============================================================ */
@@ -871,9 +1003,8 @@ function renderPurposes() {
     grid.appendChild(chip);
   });
 }
-
 /* ============================================================
-   GEOCODING — Nominatim fallback (free), cached in sessionStorage
+   GEOCODING — Nominatim fallback
 ============================================================ */
 async function geocodeNominatim(text) {
   const key = normKey(text);
@@ -889,10 +1020,8 @@ async function geocodeNominatim(text) {
   cacheSet(key, coords);
   return coords;
 }
-
 /* ============================================================
-   PLACES NEARBY SEARCH (NEW) — exactly ONE call per Find click
-   (retried once at 3000m only on zero results)
+   PLACES NEARBY SEARCH (NEW)
 ============================================================ */
 async function nearbySearch(center, types, radius) {
   countApiCall();
@@ -901,8 +1030,6 @@ async function nearbySearch(center, types, radius) {
     headers: {
       'Content-Type': 'application/json',
       'X-Goog-Api-Key': CONFIG.GOOGLE_MAPS_API_KEY,
-      // FieldMask: only the fields we render (+ id/location, required for
-      // travel-time routing, markers, and the Google Maps link).
       'X-Goog-FieldMask': [
         'places.id',
         'places.location',
@@ -910,15 +1037,18 @@ async function nearbySearch(center, types, radius) {
         'places.formattedAddress',
         'places.rating',
         'places.regularOpeningHours',
+        'places.currentOpeningHours',
         'places.priceLevel',
         'places.photos',
         'places.parkingOptions',
         'places.websiteUri',
+        'places.types',
+        'places.primaryType',
       ].join(','),
     },
     body: JSON.stringify({
       includedTypes: types,
-      maxResultCount: 10, // a little ranking headroom; still a single request
+      maxResultCount: 12,
       rankPreference: 'POPULARITY',
       languageCode: state.lang,
       locationRestriction: {
@@ -932,19 +1062,13 @@ async function nearbySearch(center, types, radius) {
   const data = await res.json();
   return data.places || [];
 }
-
 /* ============================================================
-   OSRM TRAVEL TIMES (free, no key) — graceful null on failure
+   OSRM TRAVEL TIMES
 ============================================================ */
 function osrmProfileFor(participant) {
-  // First selected transport decides routing profile.
-  // 🚗/🚕 → driving · 🚶 → walking · 🚲 → cycling · others → driving
-  for (const tr of TRANSPORTS) {
-    if (participant.modes.has(tr.id)) return tr.osrm;
-  }
+  for (const tr of TRANSPORTS) { if (participant.modes.has(tr.id)) return tr.osrm; }
   return 'driving';
 }
-
 async function osrmDuration(profile, from, to) {
   try {
     countApiCall();
@@ -954,35 +1078,26 @@ async function osrmDuration(profile, from, to) {
     if (!res.ok) return null;
     const data = await res.json();
     if (data.code !== 'Ok' || !data.routes || !data.routes.length) return null;
-    return data.routes[0].duration; // seconds
-  } catch {
-    return null; // OSRM failure → "이동시간 정보 없음" shown gracefully
-  }
+    return data.routes[0].duration;
+  } catch { return null; }
 }
-
 /* ============================================================
-   SCORING — minimize travel-time variance, then sort by rating
+   SCORING
 ============================================================ */
 function variance(nums) {
   if (!nums.length) return Infinity;
   const mean = nums.reduce((a, b) => a + b, 0) / nums.length;
   return nums.reduce((a, b) => a + (b - mean) ** 2, 0) / nums.length;
 }
-
 function scoreVenues(venues, carPresent) {
   return venues.slice().sort((a, b) => {
     let va = variance(a.durations.filter(d => d != null));
     let vb = variance(b.durations.filter(d => d != null));
-    // Car users present → prefer venues with parking (soft 20% variance penalty otherwise)
-    if (carPresent) {
-      if (!a.hasParking) va *= 1.2;
-      if (!b.hasParking) vb *= 1.2;
-    }
+    if (carPresent) { if (!a.hasParking) va *= 1.2; if (!b.hasParking) vb *= 1.2; }
     if (va !== vb) return va - vb;
     return (b.place.rating || 0) - (a.place.rating || 0);
   });
 }
-
 /* ============================================================
    MAP RENDERING
 ============================================================ */
@@ -990,7 +1105,6 @@ async function initMap(center) {
   await loadGoogleMaps();
   const mapEl = document.getElementById('map');
   if (!state.map) {
-    document.getElementById('mapPlaceholder')?.remove();
     state.map = new google.maps.Map(mapEl, {
       center, zoom: 13,
       mapTypeControl: false, streetViewControl: false, fullscreenControl: true,
@@ -1001,24 +1115,17 @@ async function initMap(center) {
     state.map.setCenter(center);
   }
 }
-
 function clearOverlays() {
   state.markers.forEach(m => m.setMap(null));
   state.polylines.forEach(pl => pl.setMap(null));
   state.markers = [];
   state.polylines = [];
 }
-
 function participantMarker(p, color) {
   const m = new google.maps.Marker({
-    position: p.coords,
-    map: state.map,
-    title: p.name,
-    icon: {
-      path: google.maps.SymbolPath.CIRCLE,
-      scale: 9, fillColor: color, fillOpacity: 1,
-      strokeColor: '#FFFFFF', strokeWeight: 2.5,
-    },
+    position: p.coords, map: state.map, title: p.name,
+    icon: { path: google.maps.SymbolPath.CIRCLE, scale: 9, fillColor: color, fillOpacity: 1,
+      strokeColor: '#FFFFFF', strokeWeight: 2.5 },
   });
   m.addListener('click', () => {
     state.infoWindow.setContent(`<div class="iw"><div class="iw-name">${escapeHtml(p.name)}</div><div class="iw-meta">${escapeHtml(p.locationText)}</div></div>`);
@@ -1027,21 +1134,17 @@ function participantMarker(p, color) {
   state.markers.push(m);
   return m;
 }
-
 const STAR_PATH = 'M 0,-12 L 3.5,-3.7 L 12,-3.7 L 5.3,1.4 L 7.4,11 L 0,5.5 L -7.4,11 L -5.3,1.4 L -12,-3.7 L -3.5,-3.7 Z';
+const DIAMOND_PATH = 'M 0,-11 L 9,0 L 0,11 L -9,0 Z';
 const RANK_COLORS = ['#F59E0B', '#94A3B8', '#B45309'];
-
-function venueMarker(venue, rank) {
+function venueMarker(venue, rank, isSecond) {
   const pos = { lat: venue.place.location.latitude, lng: venue.place.location.longitude };
   const m = new google.maps.Marker({
-    position: pos,
-    map: state.map,
-    title: venue.name,
-    zIndex: 50 - rank,
+    position: pos, map: state.map, title: venue.name, zIndex: 50 - rank,
     icon: {
-      path: STAR_PATH, scale: 1.15,
-      fillColor: RANK_COLORS[rank] || '#F59E0B', fillOpacity: 1,
-      strokeColor: '#FFFFFF', strokeWeight: 1.6,
+      path: isSecond ? DIAMOND_PATH : STAR_PATH, scale: 1.15,
+      fillColor: isSecond ? '#EC4899' : (RANK_COLORS[rank] || '#F59E0B'),
+      fillOpacity: 1, strokeColor: '#FFFFFF', strokeWeight: 1.6,
     },
   });
   m.addListener('click', () => {
@@ -1050,31 +1153,25 @@ function venueMarker(venue, rank) {
     const openTxt = venue.openNow == null ? '' : (venue.openNow ? ` · ${t('open')}` : ` · ${t('closed')}`);
     state.infoWindow.setContent(
       `<div class="iw"><div class="iw-name">${escapeHtml(venue.name)}</div>` +
-      `<div class="iw-meta">${ratingTxt}${openTxt}</div>${photo}</div>`
-    );
+      `<div class="iw-meta">${ratingTxt}${openTxt}</div>${photo}</div>`);
     state.infoWindow.open(state.map, m);
   });
   state.markers.push(m);
   return m;
 }
-
 function drawPolyline(from, to, color) {
   const pl = new google.maps.Polyline({
-    path: [from, to],
-    geodesic: true,
-    strokeColor: color, strokeOpacity: 0.75, strokeWeight: 3,
-    map: state.map,
+    path: [from, to], geodesic: true,
+    strokeColor: color, strokeOpacity: 0.75, strokeWeight: 3, map: state.map,
   });
   state.polylines.push(pl);
 }
-
 /* ============================================================
-   RESULT CARDS
+   HELPERS — opening hours / fees / venue building
 ============================================================ */
 function escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 }
-
 function priceSymbols(priceLevel) {
   const map = {
     PRICE_LEVEL_FREE: '', PRICE_LEVEL_INEXPENSIVE: '₩',
@@ -1083,70 +1180,155 @@ function priceSymbols(priceLevel) {
   };
   return map[priceLevel] ?? '';
 }
-
-function formatMinutes(seconds) {
-  return `${Math.max(1, Math.round(seconds / 60))} ${t('minutes')}`;
-}
-
+function formatMinutes(seconds) { return `${Math.max(1, Math.round(seconds / 60))} ${t('minutes')}`; }
 function photoUrlFor(place) {
   if (!place.photos || !place.photos.length) return null;
   return `https://places.googleapis.com/v1/${place.photos[0].name}/media?maxWidthPx=400&key=${encodeURIComponent(CONFIG.GOOGLE_MAPS_API_KEY)}`;
 }
-
-function renderResults(top3) {
+/* Extract today's closing time from regular/current opening hours.
+   Places API weekday order: 0=Sunday ... 6=Saturday for periods. */
+function closingTimeToday(place) {
+  const hours = place.currentOpeningHours || place.regularOpeningHours;
+  if (!hours || !hours.periods || !hours.periods.length) return null;
+  const jsDay = new Date().getDay(); // 0=Sun..6=Sat (matches Places API day)
+  // Find a period that opens today and has a close time.
+  for (const per of hours.periods) {
+    if (per.open && per.open.day === jsDay && per.close) {
+      const h = String(per.close.hour ?? 0).padStart(2, '0');
+      const m = String(per.close.minute ?? 0).padStart(2, '0');
+      return `${h}:${m}`;
+    }
+  }
+  // Fallback: if open 24h or no explicit close, return null.
+  return null;
+}
+/* Admission fee: Google Places generally does NOT expose admission fees
+   for attractions/parks/shops, so we surface priceLevel when present
+   and otherwise show "no fee info". This avoids inventing data. */
+function admissionText(place) {
+  const sym = priceSymbols(place.priceLevel);
+  if (place.priceLevel === 'PRICE_LEVEL_FREE') return t('free');
+  if (sym) return sym;
+  return null; // unknown → caller shows "입장료 정보 없음"
+}
+function venueServesAlcohol(place) {
+  const types = place.types || [];
+  if (place.primaryType && ALCOHOL_TYPES.has(place.primaryType)) return true;
+  return types.some(ty => ALCOHOL_TYPES.has(ty));
+}
+function buildVenue(place, withDurations) {
+  return {
+    place,
+    durations: withDurations || [],
+    name: place.displayName?.text || place.displayName || '—',
+    hasParking: !!(place.parkingOptions && Object.values(place.parkingOptions).some(Boolean)),
+    openNow: (place.currentOpeningHours?.openNow ?? place.regularOpeningHours?.openNow) ?? null,
+    photoUrl: photoUrlFor(place),
+    closing: closingTimeToday(place),
+    servesAlcohol: venueServesAlcohol(place),
+  };
+}
+/* ============================================================
+   RESULT CARD RENDERING
+============================================================ */
+function timeChipsHtml(venue) {
+  return state.participants.map((p, pi) => {
+    const d = venue.durations[pi];
+    const text = d == null ? t('noTravel') : formatMinutes(d);
+    return `<span class="time-chip"><span class="time-dot" style="background:${colorFor(pi)}"></span>${escapeHtml(p.name)} · ${text}</span>`;
+  }).join('');
+}
+function mainCardHtml(venue, i) {
+  const photo = venue.photoUrl
+    ? `<img class="rc-photo" src="${venue.photoUrl}" alt="${escapeHtml(venue.name)}" loading="lazy" onerror="this.outerHTML='<div class=&quot;rc-photo placeholder&quot;>📷</div>'">`
+    : `<div class="rc-photo placeholder">📷</div>`;
+  const ratingHtml = venue.place.rating ? `<span class="rc-rating">★ ${venue.place.rating.toFixed(1)}</span>` : '';
+  const priceHtml = priceSymbols(venue.place.priceLevel) ? `<span>${priceSymbols(venue.place.priceLevel)}</span>` : '';
+  const openHtml = venue.openNow == null ? ''
+    : venue.openNow ? `<span class="rc-open">● ${t('open')}</span>` : `<span class="rc-closed">● ${t('closed')}</span>`;
+  const parkingHtml = venue.hasParking ? `<span class="badge badge-parking">🅿️ ${t('parking')}</span>` : '';
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${venue.place.location.latitude},${venue.place.location.longitude}&query_place_id=${encodeURIComponent(venue.place.id || '')}`;
+  const websiteHtml = venue.place.websiteUri ? `<a href="${escapeHtml(venue.place.websiteUri)}" target="_blank" rel="noopener">🌐 ${t('website')}</a>` : '';
+  return `
+    ${photo}
+    <div class="rc-body">
+      <div class="rc-head">
+        <span class="rc-rank r${i + 1}">${i + 1}</span>
+        <span class="rc-name">${escapeHtml(venue.name)}</span>
+        ${parkingHtml}
+      </div>
+      <div class="rc-meta">${ratingHtml}${priceHtml}${openHtml}</div>
+      <div class="rc-addr">📍 ${escapeHtml(venue.place.formattedAddress || '')}</div>
+      <div class="rc-times">${timeChipsHtml(venue)}</div>
+      <div class="rc-links">
+        <a href="${mapsUrl}" target="_blank" rel="noopener">🗺️ ${t('viewMap')}</a>
+        ${websiteHtml}
+      </div>
+    </div>`;
+}
+/* Second (after-party) card: layout adapts to the purpose "kind".
+   - drink  : alcohol/non-alcohol badge + closing time
+   - cafe   : closing time emphasis
+   - travel : admission fee emphasis */
+function secondCardHtml(venue, i, kind) {
+  const photo = venue.photoUrl
+    ? `<img class="rc-photo" src="${venue.photoUrl}" alt="${escapeHtml(venue.name)}" loading="lazy" onerror="this.outerHTML='<div class=&quot;rc-photo placeholder&quot;>📷</div>'">`
+    : `<div class="rc-photo placeholder">📷</div>`;
+  const ratingHtml = venue.place.rating ? `<span class="rc-rating">★ ${venue.place.rating.toFixed(1)}</span>` : '';
+  const openHtml = venue.openNow == null ? ''
+    : venue.openNow ? `<span class="rc-open">● ${t('open')}</span>` : `<span class="rc-closed">● ${t('closed')}</span>`;
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${venue.place.location.latitude},${venue.place.location.longitude}&query_place_id=${encodeURIComponent(venue.place.id || '')}`;
+  const websiteHtml = venue.place.websiteUri ? `<a href="${escapeHtml(venue.place.websiteUri)}" target="_blank" rel="noopener">🌐 ${t('website')}</a>` : '';
+  // Build the info pills (closing time / admission fee) per kind.
+  let infoPills = '';
+  if (kind === 'travel') {
+    const fee = admissionText(venue.place);
+    infoPills = `<span class="info-pill info-fee">🎫 ${t('admission')}: ${fee ? escapeHtml(fee) : t('noAdmission')}</span>`;
+    const closing = venue.closing ? `🕒 ${t('closingTime')}: ${venue.closing}` : `🕒 ${t('noClosing')}`;
+    infoPills += `<span class="info-pill info-closing">${closing}</span>`;
+  } else {
+    // cafe & drink both emphasize closing time
+    const closing = venue.closing ? `🕒 ${t('closingTime')}: ${venue.closing}` : `🕒 ${t('noClosing')}`;
+    infoPills += `<span class="info-pill info-closing">${closing}</span>`;
+    if (kind === 'drink') {
+      infoPills += venue.servesAlcohol
+        ? `<span class="badge badge-alcohol">🍷 ${t('alcohol')}</span>`
+        : `<span class="badge badge-noalcohol">☕ ${t('noAlcohol')}</span>`;
+    }
+  }
+  return `
+    ${photo}
+    <div class="rc-body">
+      <div class="rc-head">
+        <span class="rc-rank second">${i + 1}</span>
+        <span class="rc-name">${escapeHtml(venue.name)}</span>
+      </div>
+      <div class="rc-meta">${ratingHtml}${openHtml}</div>
+      <div class="rc-addr">📍 ${escapeHtml(venue.place.formattedAddress || '')}</div>
+      <div class="rc-info-row">${infoPills}</div>
+      <div class="rc-links">
+        <a href="${mapsUrl}" target="_blank" rel="noopener">🗺️ ${t('viewMap')}</a>
+        ${websiteHtml}
+      </div>
+    </div>`;
+}
+/* Renders main group first, then the 2차 group at the very bottom (#4). */
+function renderResults(mainTop, secondTop, secondKind) {
   const area = document.getElementById('resultsArea');
   const wrap = document.getElementById('resultCards');
   wrap.innerHTML = '';
-
-  top3.forEach((venue, i) => {
+  // ---- MAIN GROUP ----
+  const mainHeader = document.createElement('div');
+  mainHeader.className = 'group-header';
+  mainHeader.innerHTML = `${t('mainGroup')} <span class="group-sub">${t('mainSub')}</span>`;
+  wrap.appendChild(mainHeader);
+  mainTop.forEach((venue, i) => {
     const card = document.createElement('div');
     card.className = 'result-card';
-
-    const photo = venue.photoUrl
-      ? `<img class="rc-photo" src="${venue.photoUrl}" alt="${escapeHtml(venue.name)}" loading="lazy" onerror="this.outerHTML='<div class=&quot;rc-photo placeholder&quot;>📷</div>'">`
-      : `<div class="rc-photo placeholder">📷</div>`;
-
-    const ratingHtml = venue.place.rating
-      ? `<span class="rc-rating">★ ${venue.place.rating.toFixed(1)}</span>` : '';
-    const priceHtml = priceSymbols(venue.place.priceLevel)
-      ? `<span>${priceSymbols(venue.place.priceLevel)}</span>` : '';
-    const openHtml = venue.openNow == null ? ''
-      : venue.openNow ? `<span class="rc-open">● ${t('open')}</span>`
-      : `<span class="rc-closed">● ${t('closed')}</span>`;
-    const parkingHtml = venue.hasParking ? `<span class="badge badge-parking">🅿️ ${t('parking')}</span>` : '';
-    const secondHtml = i === 0 ? `<span class="badge badge-second">${t('secondPick')}</span>` : '';
-
-    const timeChips = state.participants.map((p, pi) => {
-      const d = venue.durations[pi];
-      const text = d == null ? t('noTravel') : formatMinutes(d);
-      return `<span class="time-chip"><span class="time-dot" style="background:${colorFor(pi)}"></span>${escapeHtml(p.name)} · ${text}</span>`;
-    }).join('');
-
-    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${venue.place.location.latitude},${venue.place.location.longitude}&query_place_id=${encodeURIComponent(venue.place.id || '')}`;
-    const websiteHtml = venue.place.websiteUri
-      ? `<a href="${escapeHtml(venue.place.websiteUri)}" target="_blank" rel="noopener">🌐 ${t('website')}</a>` : '';
-
-    card.innerHTML = `
-      ${photo}
-      <div class="rc-body">
-        <div class="rc-head">
-          <span class="rc-rank r${i + 1}">${i + 1}</span>
-          <span class="rc-name">${escapeHtml(venue.name)}</span>
-          ${parkingHtml}${secondHtml}
-        </div>
-        <div class="rc-meta">${ratingHtml}${priceHtml}${openHtml}</div>
-        <div class="rc-addr">📍 ${escapeHtml(venue.place.formattedAddress || '')}</div>
-        <div class="rc-times">${timeChips}</div>
-        <div class="rc-links">
-          <a href="${mapsUrl}" target="_blank" rel="noopener">🗺️ ${t('viewMap')}</a>
-          ${websiteHtml}
-        </div>
-      </div>`;
+    card.style.animationDelay = `${0.05 + i * 0.12}s`;
+    card.innerHTML = mainCardHtml(venue, i);
     wrap.appendChild(card);
-
-    /* ============================================================
-       AD PLACEMENT 2 — between result card 2 and 3 (in-article)
-    ============================================================ */
+    // AD PLACEMENT 2 — between main card 2 and 3 (in-article)
     if (i === 1) {
       const ad = document.createElement('div');
       ad.className = 'ad-container';
@@ -1164,19 +1346,29 @@ function renderResults(top3) {
       wrap.appendChild(ad);
     }
   });
-
+  // ---- SECOND (AFTER-PARTY) GROUP — placed last (#4 ordering) ----
+  if (secondTop && secondTop.length) {
+    const secHeader = document.createElement('div');
+    secHeader.className = 'group-header second';
+    secHeader.innerHTML = `${t('secondGroup')} <span class="group-sub">${t('secondSub')}</span>`;
+    wrap.appendChild(secHeader);
+    secondTop.forEach((venue, i) => {
+      const card = document.createElement('div');
+      card.className = 'result-card second-card';
+      card.style.animationDelay = `${0.05 + i * 0.12}s`;
+      card.innerHTML = secondCardHtml(venue, i, secondKind);
+      wrap.appendChild(card);
+    });
+  }
   area.classList.remove('empty');
 }
-
 /* ============================================================
    ERROR / LOADING UI
 ============================================================ */
 function showError(code) {
   const map = {
-    OVER_QUERY_LIMIT: 'errQuota',
-    REQUEST_DENIED: 'errKey',
-    ZERO_RESULTS: 'errNoResults',
-    GENERIC: 'errGeneric',
+    OVER_QUERY_LIMIT: 'errQuota', REQUEST_DENIED: 'errKey',
+    ZERO_RESULTS: 'errNoResults', GENERIC: 'errGeneric',
   };
   const el = document.getElementById('msgError');
   el.textContent = t(map[code] || 'errGeneric');
@@ -1189,29 +1381,22 @@ function setLoading(on) {
   document.getElementById('loading').classList.toggle('visible', on);
   document.getElementById('btnFind').disabled = on;
 }
-
 /* ============================================================
    MAIN SEARCH FLOW
 ============================================================ */
 async function findMeetingPoint() {
   if (state.searching) return;
   hideError();
-
   if (!HAS_KEY) {
     document.getElementById('keyBanner').classList.add('visible');
     showError('REQUEST_DENIED');
     return;
   }
-  if (state.participants.length < 2) {
-    showLimitMsg(t('minMsg'));
-    return;
-  }
-
+  if (state.participants.length < 2) { showLimitMsg(t('minMsg')); return; }
   state.searching = true;
   setLoading(true);
   try {
-    // 1) Resolve coordinates: Autocomplete selection (already stored) →
-    //    sessionStorage cache → Nominatim fallback.
+    // 1) Resolve coordinates
     const unresolved = [];
     for (const p of state.participants) {
       if (p.coords) continue;
@@ -1224,9 +1409,7 @@ async function findMeetingPoint() {
         p.coords = coords;
         const card = document.querySelector(`.p-card[data-id="${p.id}"] .p-location`);
         if (card) card.classList.add('resolved');
-      } else {
-        unresolved.push(p.name);
-      }
+      } else { unresolved.push(p.name); }
     }
     if (unresolved.length) {
       const el = document.getElementById('msgError');
@@ -1236,76 +1419,78 @@ async function findMeetingPoint() {
       el._timer = setTimeout(() => el.classList.remove('visible'), 6000);
       return;
     }
-
-    // 2) Geometric centroid
+    // 2) Centroid
     const centroid = {
       lat: state.participants.reduce((a, p) => a + p.coords.lat, 0) / state.participants.length,
       lng: state.participants.reduce((a, p) => a + p.coords.lng, 0) / state.participants.length,
     };
-
-    // 3) Lazy-load the map only now
+    // 3) Reveal the right panel only now (improvement #3) and init map
+    document.getElementById('panelRight').classList.remove('hidden');
+    state.hasSearched = true;
     await initMap(centroid);
-
-    // 4) ONE Places Nearby Search at the centroid (retry once at 3000m on empty)
-    const types = (PURPOSES.find(x => x.id === state.purpose) || PURPOSES[12]).types;
-    let places = await nearbySearch(centroid, types, CONFIG.SEARCH_RADIUS_METERS);
-    if (!places.length) {
-      places = await nearbySearch(centroid, types, 3000); // ZERO_RESULTS → widen once
-    }
-    if (!places.length) {
-      showError('ZERO_RESULTS');
-      return;
-    }
-
+    const purposeDef = PURPOSES.find(x => x.id === state.purpose) || PURPOSES[12];
+    // 4) MAIN nearby search (retry once at 3000m on empty)
+    let mainPlaces = await nearbySearch(centroid, purposeDef.types, CONFIG.SEARCH_RADIUS_METERS);
+    if (!mainPlaces.length) mainPlaces = await nearbySearch(centroid, purposeDef.types, 3000);
+    if (!mainPlaces.length) { showError('ZERO_RESULTS'); return; }
     const carPresent = state.participants.some(p => p.modes.has('car'));
-
-    // Pre-rank by rating (and parking when car users exist), then keep top 5
-    // so OSRM is only queried for MAX_RESULTS venues × participants.
-    const preranked = places.slice().sort((a, b) => {
+    const mainPre = mainPlaces.slice().sort((a, b) => {
       const pa = carPresent && a.parkingOptions ? 0.3 : 0;
       const pb = carPresent && b.parkingOptions ? 0.3 : 0;
       return ((b.rating || 0) + pb) - ((a.rating || 0) + pa);
     }).slice(0, CONFIG.MAX_RESULTS);
-
-    // 5) OSRM travel times: top 5 venues × all participants, in parallel
-    const venues = await Promise.all(preranked.map(async (place) => {
+    const mainVenues = await Promise.all(mainPre.map(async (place) => {
       const target = { lat: place.location.latitude, lng: place.location.longitude };
       const durations = await Promise.all(
-        state.participants.map(p => osrmDuration(osrmProfileFor(p), p.coords, target))
-      );
-      return {
-        place,
-        durations,
-        name: place.displayName?.text || place.displayName || '—',
-        hasParking: !!(place.parkingOptions && Object.values(place.parkingOptions).some(Boolean)),
-        openNow: place.regularOpeningHours?.openNow ?? null,
-        photoUrl: photoUrlFor(place),
-      };
+        state.participants.map(p => osrmDuration(osrmProfileFor(p), p.coords, target)));
+      return buildVenue(place, durations);
     }));
-
-    // 6) Score: minimize travel-time variance, then by Google rating
-    const ranked = scoreVenues(venues, carPresent);
-    const top3 = ranked.slice(0, 3);
-
-    // 7) Render map overlays
+    const mainTop = scoreVenues(mainVenues, carPresent).slice(0, 3);
+    // 5) SECOND (after-party) nearby search at the chosen main spot
+    const secondCfg = purposeDef.second;
+    let secondTop = [];
+    let secondKind = secondCfg ? secondCfg.kind : 'cafe';
+    if (secondCfg && mainTop.length) {
+      const anchor = {
+        lat: mainTop[0].place.location.latitude,
+        lng: mainTop[0].place.location.longitude,
+      };
+      let secPlaces = await nearbySearch(anchor, secondCfg.types, 1200);
+      if (!secPlaces.length) secPlaces = await nearbySearch(anchor, secondCfg.types, 2500);
+      // Exclude any venue already shown in the main list (by id)
+      const mainIds = new Set(mainTop.map(v => v.place.id));
+      secPlaces = secPlaces.filter(pl => !mainIds.has(pl.id));
+      // Kind-specific filtering
+      if (secondKind === 'travel') {
+        // Keep attractions/parks/shops; drop pure food venues
+        secPlaces = secPlaces.filter(pl => {
+          const types = pl.types || [];
+          return types.some(ty => ['tourist_attraction','park','gift_shop','museum','scenic_point'].includes(ty))
+            || ['tourist_attraction','park','gift_shop'].includes(pl.primaryType);
+        });
+      }
+      // Rank second venues by rating, keep top 3
+      secPlaces = secPlaces.slice().sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 3);
+      secondTop = secPlaces.map(pl => buildVenue(pl));
+    }
+    // 6) Map overlays
     clearOverlays();
     const bounds = new google.maps.LatLngBounds();
-    state.participants.forEach((p, i) => {
-      participantMarker(p, colorFor(i));
-      bounds.extend(p.coords);
-    });
-    top3.forEach((v, i) => {
-      venueMarker(v, i);
+    state.participants.forEach((p, i) => { participantMarker(p, colorFor(i)); bounds.extend(p.coords); });
+    mainTop.forEach((v, i) => {
+      venueMarker(v, i, false);
       bounds.extend({ lat: v.place.location.latitude, lng: v.place.location.longitude });
     });
-    // Polylines: each participant → #1 venue
-    const best = { lat: top3[0].place.location.latitude, lng: top3[0].place.location.longitude };
+    secondTop.forEach((v, i) => {
+      venueMarker(v, i, true);
+      bounds.extend({ lat: v.place.location.latitude, lng: v.place.location.longitude });
+    });
+    const best = { lat: mainTop[0].place.location.latitude, lng: mainTop[0].place.location.longitude };
     state.participants.forEach((p, i) => drawPolyline(p.coords, best, colorFor(i)));
     state.map.fitBounds(bounds, 60);
-
-    // 8) Render result cards
-    renderResults(top3);
-    document.getElementById('resultsArea').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    // 7) Render result cards (main first, second last)
+    renderResults(mainTop, secondTop, secondKind);
+    document.getElementById('panelRight').scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (err) {
     showError(err && err.code ? err.code : 'GENERIC');
   } finally {
@@ -1313,17 +1498,14 @@ async function findMeetingPoint() {
     setLoading(false);
   }
 }
-
 /* ============================================================
-   SHARE — encode state into URL query params
+   SHARE
 ============================================================ */
 function buildShareUrl() {
   const payload = {
-    l: state.lang,
-    pu: state.purpose,
+    l: state.lang, pu: state.purpose,
     ps: state.participants.map(p => ({
-      n: p.name,
-      t: p.locationText,
+      n: p.name, t: p.locationText,
       c: p.coords ? [Number(p.coords.lat.toFixed(5)), Number(p.coords.lng.toFixed(5))] : null,
       m: [...p.modes],
     })),
@@ -1335,22 +1517,20 @@ function buildShareUrl() {
   if (DEBUG) url.searchParams.set('debug', '1');
   return url.toString();
 }
-
 async function shareState() {
   const url = buildShareUrl();
-  try {
-    await navigator.clipboard.writeText(url);
-  } catch {
+  try { await navigator.clipboard.writeText(url); }
+  catch {
     const ta = document.createElement('textarea');
     ta.value = url; document.body.appendChild(ta); ta.select();
     document.execCommand('copy'); ta.remove();
   }
   const btn = document.getElementById('btnShare');
-  const original = btn.innerHTML;
   btn.innerHTML = `✅ ${t('shareCopied')}`;
   setTimeout(() => { btn.innerHTML = `🔗 <span data-i18n="share">${t('share')}</span>`; }, 2500);
 }
-
+/* Restores participants/purpose from a shared link, but does NOT
+   auto-run the search (improvement #3 — form first, results on demand). */
 function tryRestoreShared() {
   const s = new URLSearchParams(location.search).get('s');
   if (!s) return false;
@@ -1360,46 +1540,35 @@ function tryRestoreShared() {
     if (payload.pu && PURPOSES.some(x => x.id === payload.pu)) state.purpose = payload.pu;
     if (Array.isArray(payload.ps) && payload.ps.length >= 2) {
       payload.ps.slice(0, 20).forEach(pp => addParticipant({
-        name: pp.n || '',
-        locationText: pp.t || '',
+        name: pp.n || '', locationText: pp.t || '',
         coords: Array.isArray(pp.c) ? { lat: pp.c[0], lng: pp.c[1] } : null,
-        modes: Array.isArray(pp.m) ? pp.m : [],
-        silent: true,
+        modes: Array.isArray(pp.m) ? pp.m : [], silent: true,
       }));
       return true;
     }
-  } catch { /* malformed share link — fall back to demo */ }
+  } catch {}
   return false;
 }
-
 /* ============================================================
-   DEMO DATA — pre-filled, no API calls needed for geocoding
+   INITIAL FORM DATA — pre-filled inputs, NO auto-search (#3)
 ============================================================ */
-function loadDemoData() {
+function loadInitialData() {
   addParticipant({ name: 'Alex', locationText: 'Gangnam Station, Seoul', coords: { lat: 37.4979, lng: 127.0276 }, modes: ['subway'], silent: true });
   addParticipant({ name: 'Mia',  locationText: 'Hongdae, Seoul',         coords: { lat: 37.5574, lng: 126.9245 }, modes: ['bus'],    silent: true });
   addParticipant({ name: 'Jay',  locationText: 'Jamsil, Seoul',          coords: { lat: 37.5145, lng: 127.1059 }, modes: ['car'],    silent: true });
   state.purpose = 'hangout';
 }
-
 /* ============================================================
    INIT
 ============================================================ */
 function init() {
   state.lang = detectLanguage();
-
   if (!HAS_KEY) document.getElementById('keyBanner').classList.add('visible');
   if (DEBUG) document.getElementById('debugCounter').classList.add('visible');
-
   const restored = tryRestoreShared();
-  if (!restored) loadDemoData();
-
+  if (!restored) loadInitialData();
   applyTranslations();
-  // Names that were left empty get localized defaults
-  state.participants.forEach((p, i) => {
-    if (!p.name) p.name = defaultName(i);
-  });
-
+  state.participants.forEach((p, i) => { if (!p.name) p.name = defaultName(i); });
   document.getElementById('btnAdd').addEventListener('click', () => addParticipant({}));
   document.getElementById('btnFind').addEventListener('click', findMeetingPoint);
   document.getElementById('btnShare').addEventListener('click', shareState);
@@ -1407,18 +1576,11 @@ function init() {
     const next = LANGS[(LANGS.indexOf(state.lang) + 1) % LANGS.length];
     state.lang = next;
     applyTranslations();
-    // Note: Google Maps script language is fixed once loaded;
-    // new language takes effect for the map on next page load.
   });
-
   updateCount();
-
-  // Auto-trigger search on load when a real API key is present.
-  if (HAS_KEY) {
-    setTimeout(findMeetingPoint, 400);
-  }
+  // NOTE: No auto-search on load. The right panel stays hidden until the
+  // user taps "Find meeting point" (improvement #3).
 }
-
 document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
