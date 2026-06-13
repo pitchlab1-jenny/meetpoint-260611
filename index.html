@@ -140,37 +140,31 @@ header{
 }
 .p-remove:hover{background:#FEE2E2;color:var(--accent)}
 /* Location input with leading 🔍 icon + trailing 📍 my-location button */
-.p-loc-wrap{position:relative;display:flex;align-items:center}
+/* Location area: search widget on top, 📍 my-location button below */
+.p-loc-area{display:flex;flex-direction:column;gap:6px}
+.p-loc-wrap{position:relative;display:flex;align-items:center;width:100%}
 .p-loc-icon{
-  position:absolute;left:12px;font-size:.95rem;pointer-events:none;opacity:.6;
+  position:absolute;left:12px;font-size:.95rem;pointer-events:none;opacity:.6;z-index:1;
 }
 .p-location{
   width:100%;border:1px solid var(--border);border-radius:10px;
-  padding:10px 44px 10px 36px;font-size:.88rem;background:var(--bg);
+  padding:10px 12px 10px 36px;font-size:.88rem;background:var(--bg);
   transition:border-color .15s;
 }
 .p-location:focus{outline:none;border-color:var(--primary)}
-.p-location.resolved{border-color:var(--success);background:#F0FDF4}
-/* Modern Google Places Autocomplete web component — blend it into our
-   input row: leave room for the leading 🔍 and trailing 📍. */
-.gmp-ac{
-  flex:1;min-width:0;
-  --gmp-mat-color-surface:var(--bg);
-}
-.gmp-ac::part(input),
-.gmp-ac input{
-  width:100%;border:1px solid var(--border);border-radius:10px;
-  padding:10px 44px 10px 36px;font-size:.88rem;background:var(--bg);
-  font-family:inherit;
-}
-.p-loc-wrap.resolved .gmp-ac::part(input),
-.p-loc-wrap.resolved .gmp-ac input{border-color:var(--success);background:#F0FDF4}
+.p-loc-wrap.resolved .p-location{border-color:var(--success);background:#F0FDF4}
+/* Modern Google Places Autocomplete web component — fill the row width */
+.gmp-ac{width:100%;display:block}
+.p-loc-wrap.resolved .gmp-ac::part(input){border-color:var(--success)}
+/* 📍 my-location button (now a labelled button under the search box) */
 .p-geo{
-  position:absolute;right:6px;border:none;background:transparent;font-size:1rem;
-  width:32px;height:32px;border-radius:8px;line-height:1;
-  display:flex;align-items:center;justify-content:center;transition:background .15s;
+  align-self:flex-start;border:1px solid var(--border);background:var(--surface);
+  color:var(--primary);font-size:.78rem;font-weight:600;
+  padding:6px 12px;border-radius:999px;line-height:1;
+  display:inline-flex;align-items:center;gap:5px;transition:all .15s;
 }
-.p-geo:hover{background:var(--primary-soft)}
+.p-geo:hover{background:var(--primary-soft);border-color:var(--primary)}
+.p-geo:disabled{opacity:.6;cursor:wait}
 .p-transports{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .t-chip{
   border:1px solid var(--border);background:var(--surface);border-radius:999px;
@@ -454,6 +448,7 @@ const TRANSLATIONS = {
     viewMap: 'View on Google Maps',
     website: 'Website',
     geoLoading: 'Locating…',
+    useMyLocation: 'My location',
     geoDenied: 'Please allow location access. 📍',
     geoUnsupported: 'Your browser does not support location. ',
     editName: 'Edit name',
@@ -505,6 +500,7 @@ const TRANSLATIONS = {
     viewMap: 'Google 지도에서 보기',
     website: '웹사이트',
     geoLoading: '위치 찾는 중…',
+    useMyLocation: '내 위치',
     geoDenied: '위치 권한을 허용해주세요. 📍',
     geoUnsupported: '브라우저가 위치 기능을 지원하지 않아요. ',
     editName: '이름 수정',
@@ -556,6 +552,7 @@ const TRANSLATIONS = {
     viewMap: 'Googleマップで見る',
     website: 'ウェブサイト',
     geoLoading: '位置を検索中…',
+    useMyLocation: '現在地',
     geoDenied: '位置情報の許可をお願いします。📍',
     geoUnsupported: 'お使いのブラウザは位置情報に対応していません。',
     editName: '名前を編集',
@@ -607,6 +604,7 @@ const TRANSLATIONS = {
     viewMap: '在Google地图中查看',
     website: '网站',
     geoLoading: '正在定位…',
+    useMyLocation: '我的位置',
     geoDenied: '请允许位置访问权限。📍',
     geoUnsupported: '您的浏览器不支持定位功能。',
     editName: '编辑名称',
@@ -783,13 +781,11 @@ async function attachAutocomplete(locWrap, locInput, p) {
     // Create the modern autocomplete web component.
     const ac = new PlaceAutocompleteElement();
     ac.classList.add('gmp-ac');
-    // Seed it with any existing text (e.g. restored share link / demo data).
-    if (p.locationText) {
-      try { ac.value = p.locationText; } catch {}
-    }
-    // Replace our plain input with the Google widget in the same spot.
+    // Hide our plain input + 🔍 icon; the widget brings its own input.
     locInput.style.display = 'none';
-    locWrap.insertBefore(ac, locInput.nextSibling);
+    const icon = locWrap.querySelector('.p-loc-icon');
+    if (icon) icon.style.display = 'none';
+    locWrap.appendChild(ac);
     // Modern event: gmp-select → fetch the fields we need.
     ac.addEventListener('gmp-select', async ({ placePrediction }) => {
       try {
@@ -802,11 +798,16 @@ async function attachAutocomplete(locWrap, locInput, p) {
           locWrap.classList.add('resolved');
           cacheSet(normKey(p.locationText), p.coords);
         }
-      } catch { /* ignore — Find will fall back to Nominatim if needed */ }
+      } catch (e) {
+        console.warn('[MeetPoint] place fetch failed:', e);
+      }
     });
-  } catch {
-    // Widget unavailable — reveal the plain input so Nominatim fallback works.
+  } catch (e) {
+    // Widget unavailable — log why, reveal plain input so Nominatim works.
+    console.warn('[MeetPoint] Autocomplete widget failed to load:', e);
     locInput.style.display = '';
+    const icon = locWrap.querySelector('.p-loc-icon');
+    if (icon) icon.style.display = '';
   }
 }
 /* ============================================================
@@ -841,8 +842,8 @@ function useMyLocation(p, locInput, geoBtn) {
     showLimitMsg(t('geoUnsupported'));
     return;
   }
-  const original = geoBtn.textContent;
-  geoBtn.textContent = '⏳';
+  const original = geoBtn.innerHTML;
+  geoBtn.innerHTML = '⏳ <span>' + (t('geoLoading') || '…') + '</span>';
   geoBtn.disabled = true;
   navigator.geolocation.getCurrentPosition(async (pos) => {
     const { latitude: lat, longitude: lng } = pos.coords;
@@ -850,13 +851,19 @@ function useMyLocation(p, locInput, geoBtn) {
     const addr = await reverseGeocode(lat, lng);
     p.locationText = addr;
     locInput.value = addr;
-    locInput.classList.add('resolved');
+    // Reflect into whichever input is visible (plain input or Google widget)
+    const wrap = geoBtn.closest('.p-loc-area')?.querySelector('.p-loc-wrap');
+    if (wrap) {
+      wrap.classList.add('resolved');
+      const ac = wrap.querySelector('.gmp-ac');
+      if (ac) { try { ac.value = addr; } catch {} }
+    }
     cacheSet(normKey(addr), p.coords);
-    geoBtn.textContent = original;
+    geoBtn.innerHTML = original;
     geoBtn.disabled = false;
   }, () => {
     showLimitMsg(t('geoDenied'));
-    geoBtn.textContent = original;
+    geoBtn.innerHTML = original;
     geoBtn.disabled = false;
   }, { enableHighAccuracy: true, timeout: 10000 });
 }
@@ -953,7 +960,9 @@ function renderParticipantCard(p, animate) {
   row.appendChild(nameInput);
   row.appendChild(editBtn);
   row.appendChild(removeBtn);
-  // ---- location row: 🔍 icon + input + 📍 my-location button ----
+  // ---- location area: search widget/input (full width) + 📍 button below ----
+  const locArea = document.createElement('div');
+  locArea.className = 'p-loc-area';
   const locWrap = document.createElement('div');
   locWrap.className = 'p-loc-wrap';
   const locIcon = document.createElement('span');
@@ -963,32 +972,33 @@ function renderParticipantCard(p, animate) {
   locInput.className = 'p-location';
   locInput.placeholder = t('locationPlaceholder');
   locInput.value = p.locationText || '';
-  if (p.coords) locInput.classList.add('resolved');
+  if (p.coords) locWrap.classList.add('resolved');
   locInput.setAttribute('aria-label', 'Location');
   const geoBtn = document.createElement('button');
   geoBtn.className = 'p-geo';
   geoBtn.type = 'button';
-  geoBtn.textContent = '📍';
-  geoBtn.title = 'Use my location';
-  geoBtn.setAttribute('aria-label', 'Use my location');
+  geoBtn.innerHTML = '📍 <span>' + (t('useMyLocation') || 'My location') + '</span>';
+  geoBtn.title = t('useMyLocation') || 'Use my location';
+  geoBtn.setAttribute('aria-label', t('useMyLocation') || 'Use my location');
   geoBtn.addEventListener('click', () => useMyLocation(p, locInput, geoBtn));
-  // Debounced manual-typing handler: invalidate stale coords, reuse cache
+  // Debounced manual-typing handler (only used when the plain input is visible,
+  // i.e. Google widget unavailable): invalidate stale coords, reuse cache
   let debounceTimer = null;
   locInput.addEventListener('input', () => {
     p.coords = null;
-    locInput.classList.remove('resolved');
+    locWrap.classList.remove('resolved');
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
       p.locationText = locInput.value;
       const cached = cacheGet(normKey(locInput.value));
-      if (cached) { p.coords = cached; locInput.classList.add('resolved'); }
+      if (cached) { p.coords = cached; locWrap.classList.add('resolved'); }
     }, 300);
   });
   locWrap.appendChild(locIcon);
   locWrap.appendChild(locInput);
-  locWrap.appendChild(geoBtn);
+  locArea.appendChild(locWrap);
+  locArea.appendChild(geoBtn);
   // Attach the modern Google Places Autocomplete widget (improvement #1).
-  // Done after locWrap is assembled so the widget mounts in the right slot.
   attachAutocomplete(locWrap, locInput, p);
   // ---- transports ----
   const chips = document.createElement('div');
@@ -1006,7 +1016,7 @@ function renderParticipantCard(p, animate) {
     chips.appendChild(chip);
   });
   card.appendChild(row);
-  card.appendChild(locWrap);
+  card.appendChild(locArea);
   card.appendChild(chips);
   document.getElementById('participants').appendChild(card);
   if (animate) {
@@ -1607,8 +1617,13 @@ function init() {
     applyTranslations();
   });
   updateCount();
-  // NOTE: No auto-search on load. The right panel stays hidden until the
-  // user taps "Find meeting point" (improvement #3).
+  // Improvement #3: a normal visit shows only the input form — no auto-search.
+  // Improvement (share): when arriving via a shared link, run the search
+  // automatically so the recipient sees everyone's locations AND the results
+  // right away, without tapping Find.
+  if (restored && HAS_KEY) {
+    setTimeout(findMeetingPoint, 500);
+  }
 }
 document.addEventListener('DOMContentLoaded', init);
 </script>
