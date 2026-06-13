@@ -151,6 +151,20 @@ header{
 }
 .p-location:focus{outline:none;border-color:var(--primary)}
 .p-location.resolved{border-color:var(--success);background:#F0FDF4}
+/* Modern Google Places Autocomplete web component — blend it into our
+   input row: leave room for the leading 🔍 and trailing 📍. */
+.gmp-ac{
+  flex:1;min-width:0;
+  --gmp-mat-color-surface:var(--bg);
+}
+.gmp-ac::part(input),
+.gmp-ac input{
+  width:100%;border:1px solid var(--border);border-radius:10px;
+  padding:10px 44px 10px 36px;font-size:.88rem;background:var(--bg);
+  font-family:inherit;
+}
+.p-loc-wrap.resolved .gmp-ac::part(input),
+.p-loc-wrap.resolved .gmp-ac input{border-color:var(--success);background:#F0FDF4}
 .p-geo{
   position:absolute;right:6px;border:none;background:transparent;font-size:1rem;
   width:32px;height:32px;border-radius:8px;line-height:1;
@@ -742,7 +756,7 @@ function loadGoogleMaps() {
   mapsPromise = new Promise((resolve, reject) => {
     if (window.google && window.google.maps) return resolve();
     const s = document.createElement('script');
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(CONFIG.GOOGLE_MAPS_API_KEY)}&libraries=places&language=${state.lang}`;
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(CONFIG.GOOGLE_MAPS_API_KEY)}&libraries=places,marker&language=${state.lang}&loading=async`;
     s.async = true;
     s.onload = () => { countApiCall(); resolve(); };
     s.onerror = () => { mapsPromise = null; reject(new Error('maps_load_failed')); };
@@ -751,34 +765,48 @@ function loadGoogleMaps() {
   return mapsPromise;
 }
 /* ============================================================
-   ATTACH GOOGLE PLACES AUTOCOMPLETE
-   Attached as soon as the card renders (improvement #1) so the
-   dropdown appears while typing, not only after a second focus.
-   When no API key is present yet, this silently no-ops and the
-   Nominatim fallback handles geocoding on Find.
+   ATTACH GOOGLE PLACES AUTOCOMPLETE (NEW — PlaceAutocompleteElement)
+   The legacy google.maps.places.Autocomplete was disabled for new
+   Google Cloud customers as of March 2025, so we use the modern
+   PlaceAutocompleteElement web component instead.
+   It renders its OWN search box, so we hide our plain text input and
+   mount the Google widget in the same slot. The 🔍 icon + 📍 button
+   stay; the widget sits between them. When no API key is present yet,
+   this silently no-ops and the Nominatim fallback handles geocoding.
 ============================================================ */
-async function attachAutocomplete(locInput, p) {
-  if (!HAS_KEY || locInput._acAttached) return;
-  locInput._acAttached = true;
+async function attachAutocomplete(locWrap, locInput, p) {
+  if (!HAS_KEY || locWrap._acAttached) return;
+  locWrap._acAttached = true;
   try {
     await loadGoogleMaps();
-    // ---- Google Maps Places Autocomplete ----
-    // Requires the "places" library, loaded via the script above with
-    // your API key (see CONFIG.GOOGLE_MAPS_API_KEY / API_KEY_HERE).
-    const ac = new google.maps.places.Autocomplete(locInput, {
-      fields: ['geometry.location', 'formatted_address', 'name'],
-    });
-    ac.addListener('place_changed', () => {
-      const place = ac.getPlace();
-      if (place && place.geometry && place.geometry.location) {
-        p.coords = { lat: place.geometry.location.lat(), lng: place.geometry.location.lng() };
-        p.locationText = locInput.value;
-        locInput.classList.add('resolved');
-        cacheSet(normKey(locInput.value), p.coords);
-      }
+    const { PlaceAutocompleteElement } = await google.maps.importLibrary('places');
+    // Create the modern autocomplete web component.
+    const ac = new PlaceAutocompleteElement();
+    ac.classList.add('gmp-ac');
+    // Seed it with any existing text (e.g. restored share link / demo data).
+    if (p.locationText) {
+      try { ac.value = p.locationText; } catch {}
+    }
+    // Replace our plain input with the Google widget in the same spot.
+    locInput.style.display = 'none';
+    locWrap.insertBefore(ac, locInput.nextSibling);
+    // Modern event: gmp-select → fetch the fields we need.
+    ac.addEventListener('gmp-select', async ({ placePrediction }) => {
+      try {
+        const place = placePrediction.toPlace();
+        await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location'] });
+        const loc = place.location;
+        if (loc) {
+          p.coords = { lat: loc.lat(), lng: loc.lng() };
+          p.locationText = place.formattedAddress || place.displayName || p.locationText;
+          locWrap.classList.add('resolved');
+          cacheSet(normKey(p.locationText), p.coords);
+        }
+      } catch { /* ignore — Find will fall back to Nominatim if needed */ }
     });
   } catch {
-    /* Autocomplete unavailable — Nominatim fallback covers geocoding. */
+    // Widget unavailable — reveal the plain input so Nominatim fallback works.
+    locInput.style.display = '';
   }
 }
 /* ============================================================
@@ -944,8 +972,6 @@ function renderParticipantCard(p, animate) {
   geoBtn.title = 'Use my location';
   geoBtn.setAttribute('aria-label', 'Use my location');
   geoBtn.addEventListener('click', () => useMyLocation(p, locInput, geoBtn));
-  // Attach Google Places Autocomplete right away (improvement #1)
-  attachAutocomplete(locInput, p);
   // Debounced manual-typing handler: invalidate stale coords, reuse cache
   let debounceTimer = null;
   locInput.addEventListener('input', () => {
@@ -961,6 +987,9 @@ function renderParticipantCard(p, animate) {
   locWrap.appendChild(locIcon);
   locWrap.appendChild(locInput);
   locWrap.appendChild(geoBtn);
+  // Attach the modern Google Places Autocomplete widget (improvement #1).
+  // Done after locWrap is assembled so the widget mounts in the right slot.
+  attachAutocomplete(locWrap, locInput, p);
   // ---- transports ----
   const chips = document.createElement('div');
   chips.className = 'p-transports';
