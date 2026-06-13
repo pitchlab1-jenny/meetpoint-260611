@@ -55,13 +55,18 @@ header{
 .logo h1{font-size:1.35rem;font-weight:800;letter-spacing:-.02em;white-space:nowrap}
 .logo h1 .pin{color:var(--primary)}
 .tagline{font-size:.82rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lang-btn{
-  display:flex;align-items:center;gap:6px;border:1px solid var(--border);
-  background:var(--surface);border-radius:999px;padding:8px 14px;
-  font-size:.85rem;font-weight:600;color:var(--text);transition:all .2s;
-  flex-shrink:0;
+/* Language tabs — all four visible, tap to switch */
+.lang-tabs{
+  display:flex;align-items:center;gap:4px;flex-shrink:0;
+  background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:3px;
 }
-.lang-btn:hover{border-color:var(--primary);color:var(--primary)}
+.lang-tab{
+  border:none;background:transparent;border-radius:999px;
+  padding:6px 12px;font-size:.82rem;font-weight:600;color:var(--muted);
+  transition:all .15s;white-space:nowrap;
+}
+.lang-tab:hover{color:var(--primary)}
+.lang-tab.active{background:var(--primary);color:#fff}
 /* ---------- Banners ---------- */
 .banner-key{
   display:none;background:var(--warn-bg);border-bottom:1px solid var(--warn-border);
@@ -294,6 +299,11 @@ footer{
   background:var(--surface);border-top:1px solid var(--border);
   padding:24px;text-align:center;color:var(--muted);font-size:.8rem;
 }
+.footer-note{margin-bottom:8px}
+.footer-company{font-size:.8rem;color:var(--muted)}
+.footer-company a{color:var(--primary);text-decoration:none;font-weight:600}
+.footer-company a:hover{text-decoration:underline}
+.footer-sep{margin:0 8px;opacity:.5}
 /* ---------- InfoWindow ---------- */
 .iw{max-width:240px;font-family:inherit}
 .iw img{width:100%;height:110px;object-fit:cover;border-radius:8px;margin-top:6px}
@@ -306,6 +316,7 @@ footer{
   #map{min-height:280px;height:280px;flex:none}
   .results-area{max-height:none;overflow:visible}
   .tagline{display:none}
+  .lang-tab{padding:6px 9px;font-size:.78rem}
   .rc-photo{width:90px;height:90px}
 }
 @media (prefers-reduced-motion: reduce){
@@ -322,7 +333,12 @@ footer{
     <h1><span class="pin">📍</span> MeetPoint</h1>
     <span class="tagline" data-i18n="tagline">The fairest place to meet, for everyone.</span>
   </div>
-  <button class="lang-btn" id="langBtn" aria-label="Change language">🌐 <span id="langLabel">EN</span></button>
+  <div class="lang-tabs" id="langTabs" role="tablist" aria-label="Language">
+    <button class="lang-tab" data-lang="ko" role="tab">한국어</button>
+    <button class="lang-tab" data-lang="en" role="tab">EN</button>
+    <button class="lang-tab" data-lang="ja" role="tab">日本語</button>
+    <button class="lang-tab" data-lang="zh" role="tab">中文</button>
+  </div>
 </header>
 <!-- ============================================================
      AD PLACEMENT 1 — below header (horizontal responsive banner)
@@ -385,7 +401,12 @@ footer{
     <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     -->
   </div>
-  <div>© 2026 MeetPoint · <span data-i18n="footerNote">Made for friends who can never agree where to meet.</span></div>
+  <div class="footer-note">© 2026 MeetPoint · <span data-i18n="footerNote">Made for friends who can never agree where to meet.</span></div>
+  <div class="footer-company">
+    <span data-i18n="madeBy">Made by</span> PitchNote (피치노트) · Yang Jihye (양지혜)
+    <span class="footer-sep">·</span>
+    <a id="contactLink" href="#">📧 <span data-i18n="contact">Contact</span></a>
+  </div>
 </footer>
 <!-- Loading overlay -->
 <div class="loading-overlay" id="loading">
@@ -405,6 +426,10 @@ const CONFIG = {
   GOOGLE_MAPS_API_KEY: 'AIzaSyAcTTqKOQ9exij0YfnBUgi5NXkS01zV5no',
   MAX_RESULTS: 5,
   SEARCH_RADIUS_METERS: 1500,
+  // Contact email — split into parts so spam bots can't scrape it from
+  // the source.
+  CONTACT_USER: 'pitchlab1',
+  CONTACT_DOMAIN: 'gmail.com',
 };
 const HAS_KEY = CONFIG.GOOGLE_MAPS_API_KEY && CONFIG.GOOGLE_MAPS_API_KEY !== 'API_KEY_HERE';
 /* ============================================================
@@ -423,6 +448,7 @@ const TRANSLATIONS = {
     shareCopied: 'Link copied! Send it to your group.',
     advertisement: 'Advertisement',
     footerNote: 'Made for friends who can never agree where to meet.',
+    madeBy: 'Made by', contact: 'Contact',
     personDefault: 'Person',
     locationPlaceholder: 'Search an address or place…',
     minMsg: 'You need at least 2 people to find a meeting point. 🙂',
@@ -475,6 +501,7 @@ const TRANSLATIONS = {
     shareCopied: '링크가 복사되었어요! 친구들에게 보내보세요.',
     advertisement: '광고',
     footerNote: '약속 장소 못 정하는 친구들을 위해 만들었어요.',
+    madeBy: '만든 사람', contact: '문의하기',
     personDefault: '참여자',
     locationPlaceholder: '주소나 장소를 검색하세요…',
     minMsg: '만남 장소를 찾으려면 최소 2명이 필요해요. 🙂',
@@ -527,6 +554,7 @@ const TRANSLATIONS = {
     shareCopied: 'リンクをコピーしました！みんなに送りましょう。',
     advertisement: '広告',
     footerNote: '待ち合わせ場所を決められない友達のために。',
+    madeBy: '制作', contact: 'お問い合わせ',
     personDefault: '参加者',
     locationPlaceholder: '住所や場所を検索…',
     minMsg: '待ち合わせ場所を探すには2人以上必要です。🙂',
@@ -579,6 +607,7 @@ const TRANSLATIONS = {
     shareCopied: '链接已复制！发给小伙伴吧。',
     advertisement: '广告',
     footerNote: '献给永远定不下见面地点的朋友们。',
+    madeBy: '制作', contact: '联系我们',
     personDefault: '成员',
     locationPlaceholder: '搜索地址或地点…',
     minMsg: '至少需要2个人才能查找见面地点。🙂',
@@ -707,7 +736,9 @@ function applyTranslations() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
     el.textContent = t(el.getAttribute('data-i18n'));
   });
-  document.getElementById('langLabel').textContent = LANG_LABELS[state.lang];
+  document.querySelectorAll('.lang-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.lang === state.lang);
+  });
   document.documentElement.lang = state.lang;
   renderPurposes();
   document.querySelectorAll('.p-card').forEach(card => {
@@ -1642,20 +1673,31 @@ function loadInitialData() {
    INIT
 ============================================================ */
 function init() {
-  state.lang = detectLanguage();
+  // Default language is Korean (overridden only by a shared link's lang).
+  state.lang = 'ko';
   if (!HAS_KEY) document.getElementById('keyBanner').classList.add('visible');
   if (DEBUG) document.getElementById('debugCounter').classList.add('visible');
-  const restored = tryRestoreShared();
+  const restored = tryRestoreShared(); // may set state.lang from the link
   if (!restored) loadInitialData();
   applyTranslations();
   state.participants.forEach((p, i) => { if (!p.name) p.name = defaultName(i); });
   document.getElementById('btnAdd').addEventListener('click', () => addParticipant({}));
   document.getElementById('btnFind').addEventListener('click', findMeetingPoint);
   document.getElementById('btnShare').addEventListener('click', shareState);
-  document.getElementById('langBtn').addEventListener('click', () => {
-    const next = LANGS[(LANGS.indexOf(state.lang) + 1) % LANGS.length];
-    state.lang = next;
-    applyTranslations();
+  // Assemble the contact email at runtime (spam-bot protection).
+  const contactLink = document.getElementById('contactLink');
+  if (contactLink) {
+    const email = CONFIG.CONTACT_USER + '@' + CONFIG.CONTACT_DOMAIN;
+    contactLink.href = 'mailto:' + email + '?subject=' + encodeURIComponent('[MeetPoint] 문의');
+  }
+  // Language tabs — click to switch directly.
+  document.querySelectorAll('.lang-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const lang = tab.dataset.lang;
+      if (!LANGS.includes(lang) || lang === state.lang) return;
+      state.lang = lang;
+      applyTranslations();
+    });
   });
   updateCount();
   // Improvement #3: a normal visit shows only the input form — no auto-search.
