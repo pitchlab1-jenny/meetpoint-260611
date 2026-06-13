@@ -746,20 +746,53 @@ function cacheSet(key, val) {
 }
 function normKey(text) { return (text || '').trim().toLowerCase(); }
 /* ============================================================
-   GOOGLE MAPS LOADER (lazy)
+   GOOGLE MAPS LOADER (inline bootstrap loader)
+   The modern PlaceAutocompleteElement widget requires the bootstrap
+   loader (which defines google.maps.importLibrary). The old
+   <script src=...&libraries=places> tag does NOT expose the new widget.
+   We install the official bootstrap shim once, then importLibrary()
+   pulls each library on demand.
 ============================================================ */
 let mapsPromise = null;
+function installBootstrap() {
+  if (window.google && window.google.maps && window.google.maps.importLibrary) return;
+  // Official Google inline bootstrap loader (minified, from Google docs).
+  ((g) => {
+    var h, a, k, p = "The Google Maps JavaScript API", c = "google", l = "importLibrary",
+      q = "__ib__", m = document, b = window;
+    b = b[c] || (b[c] = {});
+    var d = b.maps || (b.maps = {}), r = new Set(), e = new URLSearchParams(),
+      u = () => h || (h = new Promise(async (f, n) => {
+        await (a = m.createElement("script"));
+        e.set("libraries", [...r] + "");
+        for (k in g) e.set(k.replace(/[A-Z]/g, (t) => "_" + t[0].toLowerCase()), g[k]);
+        e.set("callback", c + ".maps." + q);
+        a.src = `https://maps.${c}apis.com/maps/api/js?` + e;
+        d[q] = f;
+        a.onerror = () => h = n(Error(p + " could not load."));
+        a.nonce = m.querySelector("script[nonce]")?.nonce || "";
+        m.head.append(a);
+      }));
+    d[l] ? console.warn(p + " only loads once. Ignoring:", g)
+         : d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n));
+  })({
+    key: CONFIG.GOOGLE_MAPS_API_KEY,
+    v: "weekly",
+    language: state.lang,
+  });
+}
 function loadGoogleMaps() {
   if (mapsPromise) return mapsPromise;
-  mapsPromise = new Promise((resolve, reject) => {
-    if (window.google && window.google.maps) return resolve();
-    const s = document.createElement('script');
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(CONFIG.GOOGLE_MAPS_API_KEY)}&libraries=places,marker&language=${state.lang}&loading=async`;
-    s.async = true;
-    s.onload = () => { countApiCall(); resolve(); };
-    s.onerror = () => { mapsPromise = null; reject(new Error('maps_load_failed')); };
-    document.head.appendChild(s);
-  });
+  mapsPromise = (async () => {
+    installBootstrap();
+    countApiCall();
+    // Pull the libraries we use up front.
+    await Promise.all([
+      google.maps.importLibrary('maps'),
+      google.maps.importLibrary('places'),
+      google.maps.importLibrary('marker'),
+    ]);
+  })().catch((e) => { mapsPromise = null; throw e; });
   return mapsPromise;
 }
 /* ============================================================
@@ -777,10 +810,8 @@ async function attachAutocomplete(locWrap, locInput, p) {
   locWrap._acAttached = true;
   try {
     await loadGoogleMaps();
-    // The script is loaded with libraries=places, so the constructor is
-    // available directly on google.maps.places — no importLibrary needed
-    // (importLibrary only exists with the newer bootstrap loader).
-    const PlaceAutocompleteElement = google.maps.places.PlaceAutocompleteElement;
+    // Now that the bootstrap loader is installed, importLibrary works.
+    const { PlaceAutocompleteElement } = await google.maps.importLibrary('places');
     if (!PlaceAutocompleteElement) throw new Error('PlaceAutocompleteElement unavailable');
     const ac = new PlaceAutocompleteElement();
     ac.classList.add('gmp-ac');
