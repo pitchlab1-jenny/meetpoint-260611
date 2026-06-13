@@ -47,15 +47,19 @@ button{font-family:inherit;cursor:pointer}
 input,select{font-family:inherit}
 /* ---------- Header ---------- */
 header{
-  position:sticky;top:0;z-index:100;height:var(--header-h);
+  position:sticky;top:0;z-index:100;min-height:var(--header-h);
   background:var(--surface);box-shadow:var(--shadow);
   display:flex;align-items:center;justify-content:space-between;
-  padding:0 24px;gap:16px;
+  padding:10px 24px;gap:16px;flex-wrap:wrap;
 }
-.logo{display:flex;align-items:baseline;gap:12px;min-width:0}
-.logo h1{font-size:1.35rem;font-weight:800;letter-spacing:-.02em;white-space:nowrap}
-.logo h1 .pin{color:var(--primary)}
-.tagline{font-size:.82rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logo{display:flex;align-items:center;gap:12px;min-width:0;flex:1;flex-wrap:wrap}
+.logo h1{
+  font-size:1.3rem;font-weight:800;letter-spacing:-.02em;white-space:nowrap;
+  flex-shrink:0;display:inline-flex;align-items:center;gap:8px;
+}
+.logo-icon{height:32px;width:auto;display:block}
+.tagline{font-size:.82rem;color:var(--muted);white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+.tagline-icon{height:16px;width:auto;display:block;opacity:.9}
 /* Language tabs — all four visible, tap to switch */
 .lang-tabs{
   display:flex;align-items:center;gap:4px;flex-shrink:0;
@@ -335,7 +339,7 @@ footer{
   .panel-left{width:100%;border-right:none;border-bottom:1px solid var(--border)}
   #map{min-height:280px;height:280px;flex:none}
   .results-area{max-height:none;overflow:visible}
-  .tagline{display:none}
+  .tagline{flex-basis:100%;white-space:normal}
   .lang-tab{padding:6px 9px;font-size:.78rem}
   .rc-photo{width:90px;height:90px}
 }
@@ -350,8 +354,8 @@ footer{
 <div class="banner-key" id="keyBanner">⚠️ API 키를 입력해주세요 / Please add your Google Maps API key</div>
 <header>
   <div class="logo">
-    <h1><span class="pin">📍</span> MeetPoint</h1>
-    <span class="tagline" data-i18n="tagline">The fairest place to meet, for everyone.</span>
+    <h1><img src="logo.png" alt="" class="logo-icon"> FindMeetPoint</h1>
+    <span class="tagline"><img src="logo.png" alt="" class="tagline-icon"> <span data-i18n="tagline">The fairest place to meet, for everyone.</span></span>
   </div>
   <div class="lang-tabs" id="langTabs" role="tablist" aria-label="Language">
     <button class="lang-tab" data-lang="ko" role="tab">한국어</button>
